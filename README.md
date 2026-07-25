@@ -22,6 +22,32 @@ See [docs/project-plan.md](docs/project-plan.md) for the product brief and
 [docs/superpowers/specs/2026-07-25-induction-app-design.md](docs/superpowers/specs/2026-07-25-induction-app-design.md)
 for the induction app design.
 
+## The app
+
+A mobile-first responsive web app (phone-framed on desktop) covering the
+patient-facing loop:
+
+- **Voice induction** — a real conversation, not a form. An AI interviewer on
+  OpenAI's Realtime API (`gpt-realtime-2.1`, WebRTC) discovers the patient's
+  location and travel range, health conditions, goals, starting fitness,
+  interests, weekly availability, and constraints — filling a live profile card
+  as it learns. Ends with the pod reveal. Falls back to typed chat
+  automatically when no microphone is available (or with `/induction?mode=text`).
+- **Home** — next event with one-tap RSVP, pod snapshot, attendance streak.
+- **Profile** — the structured, matcher-ready profile; every section
+  tap-to-edit, postcodes geocoded via postcodes.io.
+- **Pod** — who you're matched with (first names and shared interests only —
+  no one else's health data), and where the group meets.
+- **Calendar** — month view with per-day agenda of pod activities.
+- **Map** — Leaflet/OpenStreetMap view of you, your travel radius, upcoming
+  event venues, and approximate pod-member locations.
+- **Events & history** — upcoming feed with RSVPs, past timeline with
+  attendance and adherence streaks.
+
+Pod assignment currently uses a nearest-pod heuristic (geography first, per the
+product thesis); the profile schema is deliberately rich so the real matching
+engine can slot in behind the same API.
+
 ## Development
 
 A bun workspace monorepo:
