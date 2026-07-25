@@ -8,6 +8,7 @@
     "db:push": "drizzle-kit push",
     "db:seed": "bun src/db/seed.ts",
     "db:reset": "drizzle-kit push --force && bun src/db/seed.ts",
+    "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
