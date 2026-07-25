@@ -19,9 +19,12 @@ export default function Welcome() {
   // redirect, or just reopening the app signed in) to the right screen.
   // Never redirects a signed-out visitor — the welcome screen renders as normal.
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
       try {
         const me = await getMe();
+        if (cancelled) return;
         if (!me.user) return; // signed out — normal welcome screen
         if (me.patientId) {
           setCurrentPatientId(me.patientId);
@@ -32,6 +35,7 @@ export default function Welcome() {
         const localId = getCurrentPatientId();
         if (localId) {
           const claimed = await claimPatient(localId).catch(() => null);
+          if (cancelled) return;
           if (claimed?.patientId) {
             setCurrentPatientId(claimed.patientId);
             navigate("/home", { replace: true });
@@ -43,6 +47,14 @@ export default function Welcome() {
         // API down — welcome screen already handles that via the demo button's error path.
       }
     })();
+
+    // Welcome unmounts as soon as the user navigates away (tapping "Start
+    // your induction" or the demo button); without this guard a slow /api/me
+    // or /api/me/claim response could resolve afterwards and hijack that
+    // navigation with a stale redirect.
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   async function continueAsDemo() {
@@ -61,7 +73,17 @@ export default function Welcome() {
   async function continueWithGoogle() {
     setError(null);
     try {
-      await authClient.signIn.social({ provider: "google", callbackURL: "/" });
+      // better-auth client methods resolve `{ data, error }` rather than
+      // throwing on API/HTTP failure — the try/catch below only covers
+      // network-level rejections, the `error` check is what actually fires
+      // when e.g. no Google client id is configured.
+      const { error: signInError } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+      if (signInError) {
+        setError("Google sign-in isn't configured. Set GOOGLE_CLIENT_ID in .env (see README).");
+      }
     } catch {
       setError("Google sign-in isn't configured. Set GOOGLE_CLIENT_ID in .env (see README).");
     }
