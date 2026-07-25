@@ -23,6 +23,9 @@ import type {
   TranscriptEntry,
   TransportMode,
 } from "../types";
+import { user } from "./auth-schema";
+
+export * from "./auth-schema";
 
 /**
  * Enum-ish columns are plain `text` narrowed with `$type<>()`. Postgres enums
@@ -47,6 +50,10 @@ export const patients = pgTable("patients", {
   availability: jsonb("availability").$type<Availability>(),
   inductionStatus: text("induction_status").$type<InductionStatus>().notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  /** Auth identity (better-auth user). Null for demo/seed patients and pre-auth inductions. */
+  userId: text("user_id")
+    .unique()
+    .references(() => user.id, { onDelete: "set null" }),
 });
 
 export const patientConditions = pgTable(
