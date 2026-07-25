@@ -2,8 +2,10 @@ import { randomBytes } from "node:crypto";
 import { count as countFn, eq, isNotNull } from "drizzle-orm";
 import { db, tables } from "../db/index.js";
 import { generateUsers } from "./generator.js";
+import { addNotes } from "./notes.js";
 import { assignPostcodes } from "./postcodes.js";
 import { resolveRegion } from "./region.js";
+import { Rng } from "./rng.js";
 
 export interface SeedRunOptions {
   region: string; // place name, postcode, or outcode
@@ -60,8 +62,8 @@ export async function runSeed(opts: SeedRunOptions): Promise<SeedRunResult> {
   });
   const postcodesResolved = postcodes.filter((p) => p !== null).length;
 
-  // notes pass added in Task 7
-  const notesAdded = 0;
+  // Separate Rng so notes selection doesn't perturb the generator stream.
+  const notesAdded = opts.notes !== false ? await addNotes(users, new Rng(`${batchId}-notes`)) : 0;
 
   await db.transaction(async (tx) => {
     for (let offset = 0; offset < users.length; offset += 50) {
