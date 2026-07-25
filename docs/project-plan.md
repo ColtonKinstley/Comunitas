@@ -92,7 +92,7 @@ mocked with a simple referral hand-off.
 
 ## Open questions
 
-- What does the minimum lovable demo look like — how much of the loop must be
+- What does the minimum viable demo look like — how much of the loop must be
   real vs. staged?
 - Pod size, formation cadence, and what happens when someone drops out
 - Safeguarding: meeting strangers around health conditions needs care
