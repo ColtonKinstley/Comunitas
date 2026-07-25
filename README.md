@@ -8,5 +8,5 @@ adherence and success in a program being critical tothe acute and long term
 health of the patient. 
 
 **Comunitas** helps patients with similar health goals find community and
-activities to support them in their health journy. We match patients in their
-local area to events and groups targeting their perscribed intervents. The
+activities to support their health journy. We match patients and activities
+geographically with a focus on existing health conditions and lifestyle goals.
