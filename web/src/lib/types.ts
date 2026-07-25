@@ -198,6 +198,28 @@ export interface HistoryResponse {
   adherence: number;
 }
 
+/* ----------------------------------------------------------------- learn */
+
+/** One completed lesson. `lessonId` is a slug into the web app's static track. */
+export interface LessonProgressEntry {
+  lessonId: string;
+  correctCount: number;
+  totalCount: number;
+  completedAt: string;
+}
+
+export interface LearnProgressResponse {
+  progress: LessonProgressEntry[];
+}
+
+/** Body of `POST /api/patients/:id/learn/:lessonId/complete`. */
+export interface CompleteLessonBody {
+  correct: number;
+  total: number;
+}
+
+export type CompleteLessonResponse = LessonProgressEntry;
+
 /* ------------------------------------------------------------------- map */
 
 export interface MapMember {

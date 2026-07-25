@@ -20,6 +20,7 @@ import {
   eventRsvps,
   events,
   inductionSessions,
+  lessonProgress,
   patientConditions,
   patientGoals,
   patientInterests,
@@ -1018,7 +1019,7 @@ async function seed() {
     truncate table
       event_rsvps, events, pod_members,
       patient_conditions, patient_goals, patient_interests,
-      induction_sessions, pods, patients
+      induction_sessions, lesson_progress, pods, patients
     restart identity cascade
   `);
 
@@ -1200,6 +1201,35 @@ async function seed() {
         { role: "assistant", text: "Thank you Deborah. Whereabouts do you live?", at: atDaysFromNow(-1, 15, 1).toISOString() },
         { role: "user", text: "N1 5ET.", at: atDaysFromNow(-1, 15, 2).toISOString() },
       ],
+    },
+  ]);
+
+  /* ------------------------------------------------------ lesson progress */
+
+  // Priya is three lessons into the learn track (the sleep unit plus the
+  // first protein lesson), spread over the last fortnight — so the demo
+  // lands mid-path with the next lesson lit.
+  await db.insert(lessonProgress).values([
+    {
+      patientId: pid(1),
+      lessonId: "sleep-wind-down",
+      correctCount: 3,
+      totalCount: 3,
+      completedAt: atDaysFromNow(-13, 19, 30),
+    },
+    {
+      patientId: pid(1),
+      lessonId: "sleep-rhythm",
+      correctCount: 2,
+      totalCount: 3,
+      completedAt: atDaysFromNow(-9, 20, 15),
+    },
+    {
+      patientId: pid(1),
+      lessonId: "protein-why",
+      correctCount: 3,
+      totalCount: 3,
+      completedAt: atDaysFromNow(-4, 18, 45),
     },
   ]);
 

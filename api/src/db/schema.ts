@@ -179,6 +179,27 @@ export const inductionSessions = pgTable("induction_sessions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const lessonProgress = pgTable(
+  "lesson_progress",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id, { onDelete: "cascade" }),
+    // A slug into the web app's static lesson catalogue — the API stores
+    // progress without knowing the content.
+    lessonId: text("lesson_id").notNull(),
+    correctCount: integer("correct_count").notNull(),
+    totalCount: integer("total_count").notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("lesson_progress_patient_idx").on(t.patientId),
+    // Re-completing a lesson updates the stored score rather than stacking rows.
+    uniqueIndex("lesson_progress_unique").on(t.patientId, t.lessonId),
+  ],
+);
+
 /* ------------------------------------------------------------- relations */
 
 export const patientsRelations = relations(patients, ({ many, one }) => ({
@@ -186,6 +207,7 @@ export const patientsRelations = relations(patients, ({ many, one }) => ({
   goals: many(patientGoals),
   interests: many(patientInterests),
   rsvps: many(eventRsvps),
+  lessonProgress: many(lessonProgress),
   membership: one(podMembers, {
     fields: [patients.id],
     references: [podMembers.patientId],
@@ -228,6 +250,10 @@ export const inductionSessionsRelations = relations(inductionSessions, ({ one })
   patient: one(patients, { fields: [inductionSessions.patientId], references: [patients.id] }),
 }));
 
+export const lessonProgressRelations = relations(lessonProgress, ({ one }) => ({
+  patient: one(patients, { fields: [lessonProgress.patientId], references: [patients.id] }),
+}));
+
 /* ------------------------------------------------------------ row types */
 
 export type PatientRow = typeof patients.$inferSelect;
@@ -236,3 +262,4 @@ export type PodMemberRow = typeof podMembers.$inferSelect;
 export type EventRow = typeof events.$inferSelect;
 export type EventRsvpRow = typeof eventRsvps.$inferSelect;
 export type InductionSessionRow = typeof inductionSessions.$inferSelect;
+export type LessonProgressRow = typeof lessonProgress.$inferSelect;
