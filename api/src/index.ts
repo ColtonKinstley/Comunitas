@@ -3,9 +3,11 @@ import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
 import { env } from "./env";
+import { auth } from "./lib/auth";
 import { demoRoutes } from "./routes/demo";
 import { eventsRoutes } from "./routes/events";
 import { inductionRoutes } from "./routes/induction";
+import { meRoutes } from "./routes/me";
 import { patientsRoutes } from "./routes/patients";
 import { podsRoutes } from "./routes/pods";
 import { realtimeRoutes } from "./routes/realtime";
@@ -36,6 +38,9 @@ app.use(
 );
 
 app.get("/api/health", (c) => c.json({ ok: true, service: "comunitas-api" }));
+
+app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.route("/api/me", meRoutes);
 
 app.route("/api/demo", demoRoutes);
 app.route("/api/realtime", realtimeRoutes);
