@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
+import { adminSeedRoutes } from "./routes/admin-seed.js";
 import { demoRoutes } from "./routes/demo.js";
 import { eventsRoutes } from "./routes/events.js";
 import { inductionRoutes } from "./routes/induction.js";
@@ -30,7 +31,7 @@ app.use(
       return "http://localhost:5173";
     },
     allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "x-seed-secret"],
     credentials: false,
   }),
 );
@@ -43,6 +44,7 @@ app.route("/api/patients", patientsRoutes);
 app.route("/api/pods", podsRoutes);
 app.route("/api/events", eventsRoutes);
 app.route("/api/induction", inductionRoutes);
+app.route("/api/admin/seed-users", adminSeedRoutes);
 
 app.notFound((c) => c.json<ApiError>({ error: "not found" }, 404));
 

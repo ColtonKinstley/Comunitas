@@ -20,6 +20,8 @@ export const env = {
   DATABASE_URL: process.env.DATABASE_URL?.trim() || defaultDatabaseUrl,
   /** Empty in local dev until the user exports one; realtime routes must degrade gracefully. */
   OPENAI_API_KEY: process.env.OPENAI_API_KEY?.trim() || "",
+  /** Gates the admin seeding endpoint; unset -> the endpoint 404s (safe by default). */
+  SEED_SECRET: process.env.SEED_SECRET?.trim() || "",
   PORT: Number(process.env.PORT ?? 3001),
   HOST: process.env.HOST?.trim() || "0.0.0.0",
 } as const;
