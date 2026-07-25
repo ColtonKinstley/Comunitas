@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
-import { env } from "./env";
 import { demoRoutes } from "./routes/demo";
 import { eventsRoutes } from "./routes/events";
 import { inductionRoutes } from "./routes/induction";
@@ -27,6 +26,7 @@ app.use(
       if (!origin) return "http://localhost:5173";
       if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)) return origin;
       if (/:5173$/.test(origin)) return origin;
+      if (/^https:\/\/[\w.-]+\.vercel\.app$/.test(origin)) return origin;
       return "http://localhost:5173";
     },
     allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
@@ -57,10 +57,9 @@ app.onError((err, c) => {
   return c.json<ApiError>({ error: "internal server error" }, 500);
 });
 
-export default {
-  port: env.PORT,
-  hostname: env.HOST,
-  fetch: app.fetch,
-};
-
-console.log(`[api] comunitas api listening on http://${env.HOST}:${env.PORT}`);
+/**
+ * Vercel's Hono framework detection requires `src/index.ts` to default-export
+ * the bare app. Local dev serves it through `src/dev.ts` (Bun needs the
+ * port/hostname config).
+ */
+export default app;

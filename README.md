@@ -115,6 +115,25 @@ Re-run `bun run db:reset` before a demo — E2E induction runs and RSVP clicks
 mutate the seed state. A patient id in localStorage that no longer exists after
 a reset is handled: the app clears the session and returns to the welcome screen.
 
+## Deployment (Vercel)
+
+Two Vercel projects deployed from this one repo:
+
+| Project         | Root dir | What Vercel does                                        |
+| --------------- | -------- | ------------------------------------------------------- |
+| `comunitas-api` | `api/`   | Detects Hono (`src/index.ts` default-exports the app); every route becomes a Fluid-compute function |
+| `comunitas-web` | `web/`   | Vite static build; `web/vercel.json` rewrites `/api/*` to the api deployment (same-origin, no CORS) and falls back to `index.html` for react-router |
+
+- `api/src/index.ts` exports the bare Hono app for Vercel; local dev goes
+  through `api/src/dev.ts`, which adds the Bun port/hostname config.
+- The api project needs `DATABASE_URL` (a hosted Postgres — use the *pooled*
+  connection string; the client sets `prepare: false` for pooler
+  compatibility) and `OPENAI_API_KEY` env vars.
+- Schema and seed are pushed from a local machine:
+  `DATABASE_URL=<hosted url> bun run db:push && DATABASE_URL=<hosted url> bun run db:seed`.
+- If the api project's URL is not `comunitas-api.vercel.app`, update the
+  rewrite destination in `web/vercel.json`.
+
 ### Gotchas
 
 - **`web/src/lib/types.ts` is a manual copy of `api/src/types.ts`.** If you
