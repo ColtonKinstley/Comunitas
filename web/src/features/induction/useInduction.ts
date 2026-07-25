@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   appendTranscript,
+  claimPatient,
   completeInduction,
   createRealtimeSession,
   updateProfile,
@@ -241,6 +242,11 @@ export function useInduction({ audioRef, initialMode }: UseInductionOptions) {
     const startedAt = Date.now();
     try {
       const result = await completeInduction(patientId);
+      // Fire-and-forget: link this patient to the signed-in user right away
+      // rather than waiting for a later Welcome-screen revisit. Silently
+      // no-ops for anonymous users (401) and for the demo/edge 409s — must
+      // never block or break induction completion.
+      claimPatient(patientId).catch(() => {});
       await flushTranscript();
       const sessionId = sessionIdRef.current;
       if (sessionId) {

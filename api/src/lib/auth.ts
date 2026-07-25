@@ -3,6 +3,14 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db";
 import { env } from "../env";
 
+// Half-configured Google credentials fail late (and opaquely) at the token
+// exchange step rather than at boot — warn up front so it's obvious why.
+if (env.GOOGLE_CLIENT_ID && !env.GOOGLE_CLIENT_SECRET) {
+  console.warn(
+    "[auth] GOOGLE_CLIENT_ID is set but GOOGLE_CLIENT_SECRET is empty — Google sign-in will fail at token exchange.",
+  );
+}
+
 /**
  * Auth lives inside the API but is addressed by the *web* origin: the Vite
  * dev server proxies `/api` here, so callbacks and cookies are all first-party
@@ -14,6 +22,8 @@ export const auth = betterAuth({
   basePath: "/api/auth",
   secret: env.BETTER_AUTH_SECRET || undefined,
   database: drizzleAdapter(db, { provider: "pg" }),
+  // Health app — pin phone-home off explicitly rather than relying on defaults.
+  telemetry: { enabled: false },
   socialProviders: env.GOOGLE_CLIENT_ID
     ? {
         google: {

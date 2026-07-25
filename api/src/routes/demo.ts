@@ -5,7 +5,8 @@ import { patients, podMembers } from "../db/schema";
 import { fail } from "../lib/http";
 import type { DemoResponse } from "../types";
 
-const DEMO_NAME = "Priya Shah";
+/** Shared with `me.ts` so the demo persona can never be claimed by a real account. */
+export const DEMO_NAME = "Priya Shah";
 
 export const demoRoutes = new Hono();
 

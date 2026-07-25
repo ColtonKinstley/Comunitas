@@ -1,10 +1,11 @@
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, ne, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { db } from "../db";
 import { patients } from "../db/schema";
 import { auth } from "../lib/auth";
 import { jsonBody } from "../lib/http";
+import { DEMO_NAME } from "./demo";
 import type { MeResponse } from "../types";
 
 const claimSchema = z
@@ -54,7 +55,17 @@ meRoutes.post("/claim", jsonBody(claimSchema), async (c) => {
     const updated = await db
       .update(patients)
       .set({ userId: user.id })
-      .where(and(eq(patients.id, patientId), isNull(patients.userId)))
+      .where(
+        and(
+          eq(patients.id, patientId),
+          isNull(patients.userId),
+          // The shared demo persona (Priya) must never be permanently bound to a
+          // real account — a claim attempt on her falls through to the same 409
+          // as "not found or already claimed". `name` is nullable for
+          // in-progress inductions, so a null name must still pass through.
+          or(isNull(patients.name), ne(patients.name, DEMO_NAME)),
+        ),
+      )
       .returning({ id: patients.id });
     if (updated.length === 0) return c.json({ error: "patient not found or already claimed" }, 409);
   }

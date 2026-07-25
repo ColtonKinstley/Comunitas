@@ -97,6 +97,11 @@ exported in your shell instead — the API falls back to `process.env`.
 
 Sign-in is optional; everything works anonymously without auth configuration.
 
+When Google credentials are set, register `<BETTER_AUTH_URL>/api/auth/callback/google`
+as an authorized redirect URI in the Google Cloud Console for **both** origins you use
+the app from: `http://localhost:5173/api/auth/callback/google` and
+`https://macmini.taildd0824.ts.net/api/auth/callback/google`.
+
 ### Run
 
 ```sh
