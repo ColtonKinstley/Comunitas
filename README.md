@@ -67,6 +67,7 @@ network. The web dev server proxies `/api` → `http://localhost:3001`.
   (`brew install postgresql@18 && brew services start postgresql@18`)
 - A database named `comunitas`: `createdb comunitas`
 - An `OPENAI_API_KEY` for the voice induction (everything else works without one)
+- Google OAuth credentials for sign-in (optional; the app works anonymously)
 
 ### Setup
 
@@ -79,6 +80,17 @@ bun run db:seed           # load the demo data
 
 `.env` is gitignored. `OPENAI_API_KEY` can be left blank in the file and
 exported in your shell instead — the API falls back to `process.env`.
+
+**Environment variables:**
+
+| Variable               | Purpose                                                                   | Required |
+| ---------------------- | ------------------------------------------------------------------------- | -------- |
+| `BETTER_AUTH_URL`      | Origin the app is opened from. Use the tailscale HTTPS origin when demoing on a phone. | No       |
+| `BETTER_AUTH_SECRET`   | Secret key for auth sessions (run `openssl rand -base64 32` to generate)  | No       |
+| `GOOGLE_CLIENT_ID`     | Google OAuth client (get from console.cloud.google.com/apis/credentials)  | No       |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                                                 | No       |
+
+Sign-in is optional; everything works anonymously without auth configuration.
 
 ### Run
 
