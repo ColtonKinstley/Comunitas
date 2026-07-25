@@ -1,7 +1,7 @@
 import { and, asc, eq, gte, inArray, lte, ne, notInArray, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { db } from "../db";
+import { db } from "../db/index.js";
 import {
   events,
   patientConditions,
@@ -10,10 +10,10 @@ import {
   patients,
   podMembers,
   pods,
-} from "../db/schema";
-import { haversineKm, jitterCoord, roundKm } from "../lib/geo";
-import { geocodePostcode } from "../lib/geocode";
-import { fail, jsonBody, queryParams, requireUuid } from "../lib/http";
+} from "../db/schema.js";
+import { haversineKm, jitterCoord, roundKm } from "../lib/geo.js";
+import { geocodePostcode } from "../lib/geocode.js";
+import { fail, jsonBody, queryParams, requireUuid } from "../lib/http.js";
 import {
   countRsvps,
   emptyCounts,
@@ -23,8 +23,8 @@ import {
   myRsvpMap,
   toEventSummary,
   toPodSummary,
-} from "../lib/queries";
-import { weeklyStreaks } from "../lib/streak";
+} from "../lib/queries.js";
+import { weeklyStreaks } from "../lib/streak.js";
 import type {
   CompleteInductionResponse,
   EventWithRsvp,
@@ -33,7 +33,7 @@ import type {
   MapResponse,
   PatientProfile,
   UpdateProfileResponse,
-} from "../types";
+} from "../types.js";
 
 const AGE_BANDS = ["18-29", "30-44", "45-59", "60-74", "75+"] as const;
 const TRANSPORT_MODES = ["walk", "cycle", "bus", "tube", "car"] as const;

@@ -1,9 +1,9 @@
 import { asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { db } from "../db";
-import { patients, podMembers } from "../db/schema";
-import { fail } from "../lib/http";
-import type { DemoResponse } from "../types";
+import { db } from "../db/index.js";
+import { patients, podMembers } from "../db/schema.js";
+import { fail } from "../lib/http.js";
+import type { DemoResponse } from "../types.js";
 
 const DEMO_NAME = "Priya Shah";
 

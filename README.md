@@ -133,6 +133,14 @@ Two Vercel projects deployed from this one repo:
   `DATABASE_URL=<hosted url> bun run db:push && DATABASE_URL=<hosted url> bun run db:seed`.
 - If the api project's URL is not `comunitas-api.vercel.app`, update the
   rewrite destination in `web/vercel.json`.
+- **Relative imports in `api/src` must carry `.js` extensions** (NodeNext
+  resolution). Vercel compiles the api per-file with tsc, so an extensionless
+  `./routes/demo` fails at runtime with `ERR_MODULE_NOT_FOUND`. Bun, tsx and
+  drizzle-kit all resolve the `.js` specifiers back to `.ts` locally.
+- **`api/` pins TypeScript 5.x** (not the repo-wide TS 7): Vercel's Hono
+  builder loads the local TypeScript's JS compiler API, which TS 7 (the native
+  port) doesn't expose — builds die with
+  `Cannot read properties of undefined (reading 'readFile')`.
 
 ### Gotchas
 
