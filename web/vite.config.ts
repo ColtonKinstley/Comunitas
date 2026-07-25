@@ -9,6 +9,8 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     strictPort: true,
+    // Accessed over Tailscale by hostname (e.g. http://macmini:5173).
+    allowedHosts: [".ts.net", "macmini"],
     proxy: {
       "/api": {
         target: "http://localhost:3001",
