@@ -1,9 +1,17 @@
 import { eq, and, isNull } from "drizzle-orm";
 import { Hono } from "hono";
+import { z } from "zod";
 import { db } from "../db";
 import { patients } from "../db/schema";
 import { auth } from "../lib/auth";
+import { jsonBody } from "../lib/http";
 import type { MeResponse } from "../types";
+
+const claimSchema = z
+  .object({
+    patientId: z.uuid(),
+  })
+  .strict();
 
 export const meRoutes = new Hono();
 
@@ -36,11 +44,10 @@ meRoutes.get("/", async (c) => {
  * to the signed-in user. First-writer-wins: a patient already linked to a
  * different user is a 409, not a steal.
  */
-meRoutes.post("/claim", async (c) => {
+meRoutes.post("/claim", jsonBody(claimSchema), async (c) => {
   const user = await sessionUser(c.req.raw.headers);
   if (!user) return c.json({ error: "not signed in" }, 401);
-  const { patientId } = await c.req.json<{ patientId?: string }>();
-  if (!patientId) return c.json({ error: "patientId required" }, 400);
+  const { patientId } = c.req.valid("json");
 
   const already = await linkedPatientId(user.id);
   if (!already) {
