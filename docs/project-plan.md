@@ -16,9 +16,9 @@ patient, despite adherence being critical to their acute and long-term health.
 match the group.**
 
 Patients don't browse a directory of activities and hope someone shows up.
-Comunitas forms a small group of compatible people — similar health conditions,
-goals, starting fitness, and geography — and then an AI agent plans events that
-fit that group. No single person is responsible for organizing anything.
+Comunitas forms a small group of compatible people — nearby first, then
+similar health conditions, goals, and starting fitness — and an AI agent plans
+events that fit that group. No single person is responsible for organizing anything.
 
 ## Core loop
 
@@ -27,9 +27,10 @@ fit that group. No single person is responsible for organizing anything.
    fitness, interests, availability, and constraints (mobility, transport,
    confidence). Output: a structured patient profile. No forms.
 2. **Matching** — the matching engine forms pods (roughly 5–8 people) from
-   compatible profiles: condition and goal alignment first, then geography,
-   fitness level, interests, and schedule overlap. Pods start together, like a
-   program cohort, rather than joining something already in motion.
+   compatible profiles: geography first — a pod only works if everyone can
+   actually get there — then condition and goal alignment, fitness level,
+   interests, and schedule overlap. Pods start together, like a program
+   cohort, rather than joining something already in motion.
 3. **Event planning** — an AI booking agent chooses or creates an event for the
    pod: discovered from what's already popular and available locally, or
    organized ad-hoc when nothing suitable exists. The agent handles proposal,
@@ -49,9 +50,9 @@ what they've tried before. Produces the structured profile the matcher runs on.
 
 ### 2. Pod matching engine
 
-The defensible core. Matches patients to *each other* on existing health
-conditions, lifestyle goals, starting fitness state, location, and interests.
-Group-first: the output is a cohort, not a search result. The matching method
+The defensible core. Matches patients to *each other*: geography first, then
+existing health conditions, lifestyle goals, starting fitness state, and
+interests. Group-first: the output is a cohort, not a search result. The matching method
 is an open design question (rules, embeddings, ML) — start simple, keep the
 profile rich.
 
