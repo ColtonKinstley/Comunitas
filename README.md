@@ -98,6 +98,7 @@ which loads the seeded demo patient with a five-week attendance streak.
 | `bun run db:push`    | Syncs `api/src/db/schema.ts` to Postgres              |
 | `bun run db:seed`    | Truncates and reloads the demo data (idempotent)      |
 | `bun run db:reset`   | `db:push --force` then `db:seed`                      |
+| `bun run db:seed:users` | Seeds fake users into a region (see below)         |
 | `bun run typecheck`  | Typechecks both workspaces                            |
 
 ### Seed data
@@ -110,6 +111,39 @@ timestamps are relative to the moment you run the seed, so "past" and
 "upcoming" stay correct.
 
 The demo patient is **Priya Shah** (`GET /api/demo` returns her id).
+
+### Seeding demo users
+
+Generate hundreds of realistic fake patients in any geographic region, tagged
+per run and wipeable without touching the demo data or real users:
+
+```sh
+bun run db:seed:users -- --region "Hackney" --count 300 [--radius 4] [--seed 42] [--no-notes]
+bun run db:seed:users -- --list
+bun run db:seed:users -- --wipe hackney-20260725-ab12
+```
+
+`--region` accepts a place name ("Hackney", "Bristol"), a UK postcode
+("E8 3PA"), or an outcode ("E8"). Coordinates cluster naturally inside the
+radius and get real postcodes via postcodes.io. With an `OPENAI_API_KEY` set,
+one batched LLM call adds free-text notes to ~20% of users; `--no-notes` skips
+it. Passing `--seed` makes a run reproducible; omitting it generates fresh
+users each run. The CLI targets whatever `DATABASE_URL` points at.
+
+Every generated patient carries the run's batch id in `patients.seed_batch`;
+wiping deletes exactly `WHERE seed_batch = <batch>` (children cascade), so demo
+data and real users — whose `seed_batch` is null — are never touched.
+
+The same operations exist over HTTP for deployed environments, gated by a
+`SEED_SECRET` env var on the api. When `SEED_SECRET` is unset the endpoint
+404s; when set, requests must carry it in the `x-seed-secret` header:
+
+```sh
+curl -X POST $API/api/admin/seed-users -H 'content-type: application/json' \
+  -H "x-seed-secret: $SEED_SECRET" -d '{"region":"E8","count":200,"radiusKm":4}'
+curl $API/api/admin/seed-users -H "x-seed-secret: $SEED_SECRET"            # list batches
+curl -X DELETE $API/api/admin/seed-users/<batchId> -H "x-seed-secret: $SEED_SECRET"
+```
 
 Re-run `bun run db:reset` before a demo — E2E induction runs and RSVP clicks
 mutate the seed state. A patient id in localStorage that no longer exists after
@@ -148,7 +182,8 @@ Two Vercel projects deployed from this one repo:
   change an API payload, update both — nothing enforces the sync.
 - **Postgres 18 is what's tested.** Older versions will almost certainly work
   (plain tables, no extensions), but nobody has verified that claim.
-- **There is no test suite.** Verification is `bun run typecheck` plus manual /
-  Playwright-driven QA. Don't go looking for `bun test`.
+- **Tests only cover the user seeder.** `cd api && bun test` runs the seeder's
+  pure-module tests; everything else is `bun run typecheck` plus manual /
+  Playwright-driven QA.
 - **No `OPENAI_API_KEY`?** Everything works except starting a voice induction —
   the realtime session endpoint will error, the rest of the app is unaffected.
