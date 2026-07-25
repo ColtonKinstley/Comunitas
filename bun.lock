@@ -25,6 +25,7 @@
     "web": {
       "name": "web",
       "dependencies": {
+        "better-auth": "^1.6.23",
         "date-fns": "^4.4.0",
         "leaflet": "^1.9.4",
         "lucide-react": "^1.25.0",

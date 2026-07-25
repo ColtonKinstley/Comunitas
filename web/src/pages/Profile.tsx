@@ -2,8 +2,10 @@
  * The structured profile — everything the matcher uses, grouped into five
  * sections that each edit in place.
  */
-import { TriangleAlert } from "lucide-react";
+import { LogOut, TriangleAlert } from "lucide-react";
+import { useNavigate } from "react-router";
 import { Button } from "../components/Button";
+import { Card } from "../components/Card";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
 import { AboutSection } from "../features/profile/AboutSection";
@@ -12,11 +14,20 @@ import { HealthSection } from "../features/profile/HealthSection";
 import { InterestsSection } from "../features/profile/InterestsSection";
 import { LocationSection } from "../features/profile/LocationSection";
 import { useProfileData } from "../features/profile/useProfileData";
-import { useCurrentPatient } from "../lib/patient";
+import { authClient } from "../lib/auth";
+import { clearCurrentPatient, useCurrentPatient } from "../lib/patient";
 
 export default function Profile() {
+  const navigate = useNavigate();
   const patientId = useCurrentPatient();
   const { patient, loading, error, reload, setPatient } = useProfileData(patientId);
+  const { data: session } = authClient.useSession();
+
+  async function signOut() {
+    await authClient.signOut();
+    clearCurrentPatient();
+    navigate("/", { replace: true });
+  }
 
   return (
     <div className="pb-8">
@@ -52,6 +63,27 @@ export default function Profile() {
             <InterestsSection patient={patient} onSaved={setPatient} />
             <AvailabilitySection patient={patient} onSaved={setPatient} />
           </>
+        )}
+
+        {session && (
+          <Card>
+            <h2 className="flex items-center gap-2 text-lg text-ink">
+              <span className="text-brand-600" aria-hidden>
+                <LogOut size={22} />
+              </span>
+              Account
+            </h2>
+            <p className="mt-1 text-sm text-ink-faint">Signed in as {session.user.email}</p>
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => void signOut()}
+              className="mt-4"
+            >
+              <LogOut size={18} aria-hidden />
+              Sign out
+            </Button>
+          </Card>
         )}
       </div>
     </div>

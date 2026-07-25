@@ -43,6 +43,11 @@ patient-facing loop:
   event venues, and approximate pod-member locations.
 - **Events & history** — upcoming feed with RSVPs, past timeline with
   attendance and adherence streaks.
+- **Sign-in** — an optional "Continue with Google" button on the welcome
+  screen links your browser session to a patient record (via better-auth), so
+  the app remembers you across devices; sign out from Profile. The anonymous
+  flows — voice induction and **Continue as Priya (demo)** — are unaffected
+  and remain the fastest way in.
 
 Pod assignment currently uses a nearest-pod heuristic (geography first, per the
 product thesis); the profile schema is deliberately rich so the real matching

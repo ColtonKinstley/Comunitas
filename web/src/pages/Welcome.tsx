@@ -1,9 +1,10 @@
-import { ArrowRight, LoaderCircle, Mic, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, LoaderCircle, LogIn, Mic, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button, LinkButton } from "../components/Button";
-import { getDemo } from "../lib/api";
-import { setCurrentPatientId } from "../lib/patient";
+import { claimPatient, getDemo, getMe } from "../lib/api";
+import { authClient } from "../lib/auth";
+import { getCurrentPatientId, setCurrentPatientId } from "../lib/patient";
 
 /**
  * The brand moment. Two ways in: start a fresh voice induction, or step
@@ -13,6 +14,36 @@ export default function Welcome() {
   const navigate = useNavigate();
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Resolves an existing auth session (e.g. landing back here after an OAuth
+  // redirect, or just reopening the app signed in) to the right screen.
+  // Never redirects a signed-out visitor — the welcome screen renders as normal.
+  useEffect(() => {
+    (async () => {
+      try {
+        const me = await getMe();
+        if (!me.user) return; // signed out — normal welcome screen
+        if (me.patientId) {
+          setCurrentPatientId(me.patientId);
+          navigate("/home", { replace: true });
+          return;
+        }
+        // Signed in but no patient yet: adopt a pre-auth localStorage patient, else induct.
+        const localId = getCurrentPatientId();
+        if (localId) {
+          const claimed = await claimPatient(localId).catch(() => null);
+          if (claimed?.patientId) {
+            setCurrentPatientId(claimed.patientId);
+            navigate("/home", { replace: true });
+            return;
+          }
+        }
+        navigate("/induction", { replace: true });
+      } catch {
+        // API down — welcome screen already handles that via the demo button's error path.
+      }
+    })();
+  }, [navigate]);
 
   async function continueAsDemo() {
     setLoadingDemo(true);
@@ -24,6 +55,15 @@ export default function Welcome() {
     } catch {
       setError("Couldn't load the demo patient. Check the API is running and the database is seeded.");
       setLoadingDemo(false);
+    }
+  }
+
+  async function continueWithGoogle() {
+    setError(null);
+    try {
+      await authClient.signIn.social({ provider: "google", callbackURL: "/" });
+    } catch {
+      setError("Google sign-in isn't configured. Set GOOGLE_CLIENT_ID in .env (see README).");
     }
   }
 
@@ -65,6 +105,11 @@ export default function Welcome() {
           <Mic size={22} aria-hidden />
           Start your induction
         </LinkButton>
+
+        <Button variant="secondary" size="lg" fullWidth onClick={continueWithGoogle}>
+          <LogIn size={22} aria-hidden />
+          Continue with Google
+        </Button>
 
         <Button
           variant="secondary"
