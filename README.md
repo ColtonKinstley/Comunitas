@@ -110,3 +110,18 @@ timestamps are relative to the moment you run the seed, so "past" and
 "upcoming" stay correct.
 
 The demo patient is **Priya Shah** (`GET /api/demo` returns her id).
+
+Re-run `bun run db:reset` before a demo — E2E induction runs and RSVP clicks
+mutate the seed state. A patient id in localStorage that no longer exists after
+a reset is handled: the app clears the session and returns to the welcome screen.
+
+### Gotchas
+
+- **`web/src/lib/types.ts` is a manual copy of `api/src/types.ts`.** If you
+  change an API payload, update both — nothing enforces the sync.
+- **Postgres 18 is what's tested.** Older versions will almost certainly work
+  (plain tables, no extensions), but nobody has verified that claim.
+- **There is no test suite.** Verification is `bun run typecheck` plus manual /
+  Playwright-driven QA. Don't go looking for `bun test`.
+- **No `OPENAI_API_KEY`?** Everything works except starting a voice induction —
+  the realtime session endpoint will error, the rest of the app is unaffected.
