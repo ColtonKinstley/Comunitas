@@ -1,30 +1,223 @@
-import { Mic } from "lucide-react";
-import { LinkButton } from "../components/Button";
-import { EmptyState } from "../components/EmptyState";
-
 /**
- * Placeholder. Owned by the voice work stream: mic permission → WebRTC connect
- * → live captions + profile card → pod reveal → /home.
+ * The voice induction.
+ *
+ * Intro (what's about to happen + mic) → connect → live conversation with
+ * captions and a profile card that fills in as the interviewer learns things →
+ * "we found your pod" → /home.
+ *
+ * `?mode=text` (or a refused microphone) runs the identical conversation
+ * typed instead of spoken — that path is what headless QA drives.
  */
-export default function Induction() {
-  return (
-    <div className="flex min-h-full flex-col px-5 pt-10 pb-8">
-      <h1 className="text-2xl text-ink">Your induction</h1>
-      <p className="mt-1 text-base text-ink-soft">
-        A short spoken conversation — no forms to fill in.
-      </p>
+import { AlertTriangle, Keyboard, LoaderCircle, Mic, ShieldCheck, Sparkles } from "lucide-react";
+import { useRef } from "react";
+import { useSearchParams } from "react-router";
+import { Button, LinkButton } from "../components/Button";
+import { Captions } from "../features/induction/Captions";
+import { LiveProfileCard } from "../features/induction/LiveProfileCard";
+import { PodReveal } from "../features/induction/PodReveal";
+import { TextComposer } from "../features/induction/TextComposer";
+import { VoiceIndicator } from "../features/induction/VoiceIndicator";
+import { InductionStyles } from "../features/induction/styles";
+import { useInduction } from "../features/induction/useInduction";
 
-      <div className="mt-8 flex-1">
-        <EmptyState
-          icon={<Mic size={28} />}
-          title="Coming soon"
-          message="The voice interview will live here."
-        />
+const WHAT_TO_EXPECT = [
+  "Where you live, and how far you're happy to travel",
+  "What's going on with your health, in your own words",
+  "What you enjoy doing, and when you're free",
+];
+
+export default function Induction() {
+  const [params] = useSearchParams();
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const textOnly = params.get("mode") === "text";
+
+  const induction = useInduction({
+    audioRef,
+    initialMode: textOnly ? "text" : "voice",
+  });
+
+  const {
+    phase,
+    mode,
+    error,
+    captions,
+    profile,
+    assistantSpeaking,
+    userSpeaking,
+    thinking,
+    completion,
+    start,
+    retry,
+    sendText,
+  } = induction;
+
+  return (
+    <>
+      <InductionStyles />
+      {/* Remote audio from the model. Hidden — it's a speaker, not a control. */}
+      <audio ref={audioRef} autoPlay className="hidden" />
+
+      {phase === "intro" && <Intro mode={mode} onStart={start} />}
+
+      {(phase === "permission" || phase === "connecting") && (
+        <Connecting waitingForMic={phase === "permission"} />
+      )}
+
+      {(phase === "live" || phase === "completing") && (
+        <div className="flex min-h-full flex-col px-5 pt-6 pb-2">
+          <div className="flex items-center justify-between gap-3">
+            <VoiceIndicator
+              assistantSpeaking={assistantSpeaking}
+              userSpeaking={userSpeaking}
+              thinking={thinking}
+              mode={mode}
+            />
+          </div>
+
+          <div className="mt-4">
+            <Captions captions={captions} />
+          </div>
+
+          <div className="mt-4 flex-1">
+            <LiveProfileCard profile={profile} />
+          </div>
+
+          {mode === "text" && (
+            <TextComposer onSend={sendText} disabled={phase !== "live"} />
+          )}
+          {mode !== "text" && <div className="h-4" />}
+
+          {phase === "completing" && <FindingOverlay />}
+        </div>
+      )}
+
+      {phase === "complete" && completion && <PodReveal result={completion} />}
+
+      {phase === "error" && <ErrorState message={error} onRetry={retry} />}
+    </>
+  );
+}
+
+/* ---------------------------------------------------------------- intro */
+
+function Intro({ mode, onStart }: { mode: "voice" | "text"; onStart: () => void }) {
+  return (
+    <div className="flex min-h-full flex-col px-6 pt-12 pb-8">
+      <div className="flex flex-1 flex-col">
+        <span
+          className="mb-6 flex size-16 items-center justify-center rounded-3xl bg-brand-600 text-white shadow-lg shadow-brand-600/25"
+          aria-hidden
+        >
+          {mode === "text" ? <Keyboard size={30} /> : <Mic size={30} />}
+        </span>
+
+        <h1 className="text-3xl font-bold text-balance text-brand-900">
+          Let's have a quick chat
+        </h1>
+        <p className="mt-4 text-lg text-balance text-ink-soft">
+          {mode === "text"
+            ? "Type your answers and our health companion will guide you through. About five minutes — no forms."
+            : "Our health companion will ask you a few questions out loud. Just answer in your own words — no forms, about five minutes."}
+        </p>
+
+        <ul className="mt-7 space-y-3">
+          {WHAT_TO_EXPECT.map((item) => (
+            <li key={item} className="flex gap-3 text-base text-ink">
+              <span
+                className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700"
+                aria-hidden
+              >
+                <Sparkles size={14} />
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-7 flex gap-3 rounded-2xl border border-line bg-surface p-4">
+          <ShieldCheck size={22} className="mt-0.5 shrink-0 text-brand-600" aria-hidden />
+          <p className="text-sm text-ink-soft">
+            This isn't medical advice and nothing here replaces your GP. We only ask what we need
+            to find you the right local group.
+          </p>
+        </div>
       </div>
 
-      <LinkButton to="/" variant="ghost" size="lg" fullWidth className="mt-6">
-        Back to start
-      </LinkButton>
+      <div className="mt-8 space-y-3">
+        <Button size="lg" fullWidth onClick={onStart} data-testid="start-induction">
+          {mode === "text" ? <Keyboard size={22} aria-hidden /> : <Mic size={22} aria-hidden />}
+          {mode === "text" ? "Start the conversation" : "Start — allow the microphone"}
+        </Button>
+        {mode !== "text" && (
+          <p className="text-center text-sm text-ink-faint">
+            Your browser will ask permission to use your microphone. No microphone? We'll switch
+            to typing automatically.
+          </p>
+        )}
+        <LinkButton to="/" variant="ghost" size="md" fullWidth>
+          Not now
+        </LinkButton>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------- connecting */
+
+function Connecting({ waitingForMic }: { waitingForMic: boolean }) {
+  return (
+    <div className="flex min-h-full flex-col items-center justify-center px-8 text-center">
+      <LoaderCircle size={44} className="animate-spin text-brand-600" aria-hidden />
+      <h1 className="mt-6 text-2xl text-ink">
+        {waitingForMic ? "Waiting for your microphone" : "Connecting…"}
+      </h1>
+      <p className="mt-2 max-w-[30ch] text-base text-balance text-ink-soft">
+        {waitingForMic
+          ? "Please choose “Allow” when your browser asks."
+          : "One moment — we're getting your companion on the line."}
+      </p>
+    </div>
+  );
+}
+
+function FindingOverlay() {
+  return (
+    <div
+      className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-canvas/92 px-8 text-center backdrop-blur-sm"
+      data-testid="finding-pod"
+    >
+      <LoaderCircle size={44} className="animate-spin text-brand-600" aria-hidden />
+      <p className="mt-6 text-2xl font-bold text-brand-900">Finding your group…</p>
+      <p className="mt-2 text-base text-ink-soft">Matching you with people near you.</p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- error */
+
+function ErrorState({ message, onRetry }: { message: string | null; onRetry: () => void }) {
+  return (
+    <div className="flex min-h-full flex-col px-6 pt-12 pb-8" data-testid="induction-error">
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <span
+          className="mb-6 flex size-16 items-center justify-center rounded-3xl bg-danger-100 text-danger-700"
+          aria-hidden
+        >
+          <AlertTriangle size={30} />
+        </span>
+        <h1 className="text-2xl text-ink">That didn't work</h1>
+        <p className="mt-3 max-w-[32ch] text-base text-balance text-ink-soft" role="alert">
+          {message ?? "We couldn't start the conversation."}
+        </p>
+      </div>
+      <div className="mt-8 space-y-3">
+        <Button size="lg" fullWidth onClick={onRetry}>
+          Try again
+        </Button>
+        <LinkButton to="/" variant="ghost" size="md" fullWidth>
+          Back to start
+        </LinkButton>
+      </div>
     </div>
   );
 }
