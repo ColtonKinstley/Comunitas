@@ -7,6 +7,7 @@
     "dev": "bun run --filter api --filter web dev",
     "db:push": "bun run --filter api db:push",
     "db:seed": "bun run --filter api db:seed",
+    "db:seed:users": "bun run --filter api db:seed:users",
     "db:reset": "bun run --filter api db:reset",
     "typecheck": "bun run --filter api --filter web typecheck"
   }
