@@ -26,18 +26,21 @@ export function VoiceIndicator({
         ? "thinking"
         : "idle";
 
+  // In a typed conversation nobody is speaking, so don't say anyone is.
+  const typed = mode === "text";
+
   const copy = {
-    speaking: "Speaking…",
-    listening: "Listening…",
+    speaking: typed ? "Typing…" : "Speaking…",
+    listening: typed ? "Reading your answer…" : "Listening…",
     thinking: "Thinking…",
-    idle: mode === "text" ? "Type your answer below" : "Go ahead — I'm listening",
+    idle: typed ? "Type your answer below" : "Go ahead — I'm listening",
   }[state];
 
   const Icon = {
-    speaking: Volume2,
-    listening: Ear,
+    speaking: typed ? Keyboard : Volume2,
+    listening: typed ? Keyboard : Ear,
     thinking: Loader2,
-    idle: mode === "text" ? Keyboard : Ear,
+    idle: typed ? Keyboard : Ear,
   }[state];
 
   const active = state === "speaking" || state === "listening";

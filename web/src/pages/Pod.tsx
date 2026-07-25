@@ -68,9 +68,10 @@ export default function Pod() {
 
             {pod.sharedInterests.length > 0 && (
               <Card>
-                <h2 className="text-lg text-ink">Why you're together</h2>
+                <h2 className="text-lg text-ink">What the group enjoys</h2>
                 <p className="mt-1 text-base text-ink-soft">
-                  You live close to one another and you share these:
+                  You all live close to one another. These are the things people in this pod are
+                  into:
                 </p>
                 <ul className="mt-3 flex flex-wrap gap-2">
                   {pod.sharedInterests.map((interest) => (

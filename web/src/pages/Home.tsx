@@ -70,7 +70,7 @@ export default function Home() {
             )}
 
             {following && (
-              <LinkCard to="/events">
+              <LinkCard to={`/events/${following.id}`}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold tracking-wide text-ink-faint uppercase">

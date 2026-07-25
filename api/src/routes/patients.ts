@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray, lte, ne } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte, ne, notInArray, or } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
 import { db } from "../db";
@@ -207,6 +207,38 @@ patientsRoutes.patch("/:id/profile", jsonBody(updateProfileSchema), async (c) =>
   return c.json<UpdateProfileResponse>({ patient, ...(warning ? { warning } : {}) });
 });
 
+/**
+ * Shared-interest overlap between this patient and a pod: for every interest
+ * they have, how many of that pod's members share it. Counting members rather
+ * than distinct slugs is what makes it discriminate — nearly every pod has
+ * *somebody* who cycles, but only one of them is the cycling pod.
+ *
+ * One round trip, then a pure lookup — the matcher calls it once per pod.
+ */
+async function sharedInterestScorer(patientId: string): Promise<(podId: string) => number> {
+  const slug = (s: string) => s.trim().toLowerCase();
+
+  const [mineRows, memberRows] = await Promise.all([
+    db
+      .select({ interest: patientInterests.interest })
+      .from(patientInterests)
+      .where(eq(patientInterests.patientId, patientId)),
+    db
+      .select({ podId: podMembers.podId, interest: patientInterests.interest })
+      .from(podMembers)
+      .innerJoin(patientInterests, eq(patientInterests.patientId, podMembers.patientId)),
+  ]);
+
+  const mine = new Set(mineRows.map((r) => slug(r.interest)));
+  const tally = new Map<string, number>();
+  for (const row of memberRows) {
+    if (!mine.has(slug(row.interest))) continue;
+    tally.set(row.podId, (tally.get(row.podId) ?? 0) + 1);
+  }
+
+  return (podId) => tally.get(podId) ?? 0;
+}
+
 /* -------------------------- POST /api/patients/:id/complete-induction */
 
 patientsRoutes.post("/:id/complete-induction", async (c) => {
@@ -221,10 +253,14 @@ patientsRoutes.post("/:id/complete-induction", async (c) => {
   const sizeOf = new Map<string, number>();
   for (const m of podSizes) sizeOf.set(m.podId, (sizeOf.get(m.podId) ?? 0) + 1);
 
+  const overlapWith = await sharedInterestScorer(id);
+
   /**
-   * Assignment heuristic (the real matcher is out of scope): nearest pod
-   * centroid inside the patient's travel radius; if none qualify, the nearest
-   * pod overall; with no coordinates at all, the smallest pod.
+   * Assignment heuristic (the real matcher is out of scope). Geography first,
+   * because that is the whole product thesis: among the pods inside the
+   * patient's travel radius, prefer the one whose members share the most
+   * interests, and break ties on distance. If nothing is in range, the nearest
+   * pod wins outright; with no coordinates at all, the smallest pod.
    */
   let chosen: (typeof allPods)[number] | null = null;
   let distanceKm: number | null = null;
@@ -235,9 +271,12 @@ patientsRoutes.post("/:id/complete-induction", async (c) => {
       .map((pod) => ({
         pod,
         km: haversineKm(patient.lat!, patient.lng!, pod.centroidLat!, pod.centroidLng!),
+        shared: overlapWith(pod.id),
       }))
       .sort((a, b) => a.km - b.km);
-    const withinRadius = ranked.filter((r) => r.km <= patient.travelRadiusKm);
+    const withinRadius = [...ranked]
+      .filter((r) => r.km <= patient.travelRadiusKm)
+      .sort((a, b) => b.shared - a.shared || a.km - b.km);
     const best = withinRadius[0] ?? ranked[0]!;
     chosen = best.pod;
     distanceKm = roundKm(best.km);
@@ -280,13 +319,21 @@ patientsRoutes.get("/:id/events", queryParams(eventsQuerySchema), async (c) => {
   const statuses = parseStatuses(status);
 
   const [membership] = await db
-    .select({ podId: podMembers.podId })
+    .select({ podId: podMembers.podId, joinedAt: podMembers.joinedAt })
     .from(podMembers)
     .where(eq(podMembers.patientId, id))
     .limit(1);
   if (!membership) return c.json<EventWithRsvp[]>([]);
 
-  const filters = [eq(events.podId, membership.podId)];
+  const filters = [
+    eq(events.podId, membership.podId),
+    // Same honesty rule as /history: a pod's finished business from before you
+    // joined is not your calendar, and must never show up as something you did.
+    or(
+      notInArray(events.status, ["completed", "cancelled"]),
+      gte(events.startsAt, membership.joinedAt),
+    )!,
+  ];
   if (fromDate) filters.push(gte(events.startsAt, fromDate));
   if (toDate) filters.push(lte(events.startsAt, toDate));
   if (statuses?.length) filters.push(inArray(events.status, statuses));

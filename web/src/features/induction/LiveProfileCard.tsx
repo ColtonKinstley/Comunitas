@@ -2,8 +2,12 @@
  * The money shot: a profile that visibly assembles itself while the person
  * talks. Every section is rendered from the first frame — greyed out and
  * waiting — so you can watch it fill in rather than watch it appear.
+ *
+ * It sits *under* the conversation though, so by default only the header shows:
+ * the name, the running "N of 7", and the progress bar. Tap to open the detail.
  */
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { Chip, humanizeSlug } from "../../components/Chip";
 import type { DayKey, Tag, TimeSlot } from "../../lib/types";
@@ -102,6 +106,7 @@ function Meter({ value, max = 5, label }: { value: number; max?: number; label: 
 }
 
 export function LiveProfileCard({ profile }: { profile: ProfileState }) {
+  const [open, setOpen] = useState(false);
   const { draft, versions } = profile;
   const v = (key: string) => versions[key] ?? 0;
 
@@ -133,25 +138,64 @@ export function LiveProfileCard({ profile }: { profile: ProfileState }) {
       className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card"
       data-testid="live-profile"
     >
-      {/* Header + progress */}
-      <div className="bg-brand-50/70 px-5 pt-4 pb-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-bold text-brand-900">Your profile so far</h2>
-          <span className="text-sm font-semibold text-brand-700" data-testid="profile-progress">
-            {done} of {total}
+      {/* Header + progress — the whole thing is the expand control. */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls="live-profile-detail"
+        data-testid="profile-toggle"
+        className="block w-full cursor-pointer bg-brand-50/70 px-4 py-3 text-left transition-colors hover:bg-brand-100/70"
+      >
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between gap-3">
+              <p
+                key={`name-${v("name")}`}
+                className="induction-rise truncate text-base font-bold text-brand-900"
+              >
+                {draft.name ?? "Your profile so far"}
+              </p>
+              <span
+                className="shrink-0 text-sm font-semibold text-brand-700"
+                data-testid="profile-progress"
+              >
+                {done} of {total}
+              </span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-200/70">
+              <div
+                className="h-full rounded-full bg-brand-500 transition-[width] duration-700 ease-out"
+                style={{ width: `${(done / total) * 100}%` }}
+              />
+            </div>
+          </div>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface text-brand-700">
+            <ChevronDown
+              size={20}
+              className={open ? "rotate-180 transition-transform" : "transition-transform"}
+              aria-hidden
+            />
+            <span className="sr-only">{open ? "Hide details" : "Show details"}</span>
           </span>
         </div>
-        <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-brand-200/70">
-          <div
-            className="h-full rounded-full bg-brand-500 transition-[width] duration-700 ease-out"
-            style={{ width: `${(done / total) * 100}%` }}
-          />
-        </div>
-        <p key={`name-${v("name")}`} className="induction-rise mt-3 text-2xl font-bold text-ink">
-          {draft.name ?? <span className="text-ink-faint/80 italic">Waiting for a name…</span>}
-        </p>
-      </div>
+      </button>
 
+      {!open && (
+        <p className="border-t border-line/70 px-4 py-2 text-sm text-ink-faint">
+          {done === 0
+            ? "This fills in as we talk — tap to watch."
+            : "Tap to see what we've got so far."}
+        </p>
+      )}
+
+      {/* Capped so opening it never pushes the card past the fold — the whole
+          reveal stays on screen and scrolls within itself. */}
+      <div
+        id="live-profile-detail"
+        hidden={!open}
+        className="max-h-[45vh] overflow-y-auto overscroll-contain border-t border-line/70"
+      >
       <Row label="Where you are" version={v("location")} filled={hasLocation}>
         {hasLocation ? (
           <div className="flex flex-wrap items-center gap-2" data-testid="profile-postcode">
@@ -270,6 +314,7 @@ export function LiveProfileCard({ profile }: { profile: ProfileState }) {
           <Waiting>Anything we should know</Waiting>
         )}
       </Row>
+      </div>
     </section>
   );
 }

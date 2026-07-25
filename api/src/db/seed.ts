@@ -8,6 +8,12 @@
  * Postcodes and coordinates are real (resolved via postcodes.io) so the map,
  * travel radii and nearest-pod matching all behave like the real thing.
  */
+
+// Every timestamp below is authored as a London wall-clock time, so the seed
+// must think in London whatever TZ the shell happens to be in. Set before any
+// Date is constructed — a 9:00 seed has to render as 9:00am in the browser.
+process.env.TZ = "Europe/London";
+
 import { sql as raw } from "drizzle-orm";
 import { db, sql } from "./index";
 import {
@@ -50,6 +56,53 @@ const weeksAgo = (weeks: number, hour: number, minute = 0) =>
   atDaysFromNow(-7 * weeks, hour, minute);
 
 const plusMinutes = (d: Date, minutes: number) => new Date(d.getTime() + minutes * 60_000);
+
+/* ------------------------------------------------------------ weekdays */
+
+/**
+ * Every recurring series meets on the same day each week — "Saturday Park Loop"
+ * has to actually fall on a Saturday, whatever day the seed is run. Days are
+ * `Date.getDay()` values.
+ */
+const DOW = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 } as const;
+type Weekday = (typeof DOW)[keyof typeof DOW];
+
+/** Monday 00:00 of the week containing `from`. */
+function mondayOfWeek(from: Date): Date {
+  const d = new Date(from);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Sun=0 → 6, Mon=1 → 0
+  return d;
+}
+
+/**
+ * A past occurrence: `weeks` whole Monday-weeks back, on `dow`.
+ *
+ * Anchoring on whole weeks (rather than "the last Saturday minus n×7 days")
+ * is what keeps a weekly series exactly one calendar week apart no matter
+ * which weekday each series meets on — and the adherence streak counts
+ * calendar weeks, so a collision there would silently break Priya's streak.
+ */
+function pastOn(weeks: number, dow: Weekday, hour: number, minute: number): Date {
+  const d = mondayOfWeek(NOW);
+  d.setDate(d.getDate() - 7 * weeks + ((dow + 6) % 7));
+  d.setHours(hour, minute, 0, 0);
+  return d;
+}
+
+/**
+ * The soonest `dow` at least a day from now, pushed on by `weeksAfter` whole
+ * weeks. `weeksAfter: 0` therefore lands 1–7 days out, `1` lands 8–14, and so
+ * on — so a pod's flagship series always reads as the next thing up.
+ */
+function upcomingOn(dow: Weekday, weeksAfter: number, hour: number, minute: number): Date {
+  const d = new Date(NOW);
+  d.setDate(d.getDate() + 1); // never today
+  d.setHours(hour, minute, 0, 0);
+  while (d.getDay() !== dow) d.setDate(d.getDate() + 1);
+  d.setDate(d.getDate() + 7 * weeksAfter);
+  return d;
+}
 
 /** Stable 0–99 hash so attendance patterns never shift between runs. */
 function hash100(...parts: string[]): number {
@@ -539,9 +592,12 @@ interface SeedEvent {
   venueName: string;
   lat: number;
   lng: number;
-  /** Negative = weeks in the past, positive = days from now. */
+  /** The day of the week this series meets on. Both past and future occurrences snap to it. */
+  dow: Weekday;
+  /** Past occurrence: this many whole weeks back. */
   weeksAgo?: number;
-  daysAhead?: number;
+  /** Upcoming occurrence: 0 = the next one (1–7 days out), 1 = the one after (8–14), … */
+  weeksAhead?: number;
   hour: number;
   minutes: number;
   status: EventStatus;
@@ -558,6 +614,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "St John's Churchyard Gardens, Hackney",
     lat: 51.5468,
     lng: -0.0553,
+    dow: DOW.wed,
     weeksAgo: 6,
     hour: 10,
     minutes: 30,
@@ -572,6 +629,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Hackney Marshes",
     lat: 51.554,
     lng: -0.029,
+    dow: DOW.sun,
     weeksAgo: 5,
     hour: 10,
     minutes: 0,
@@ -586,6 +644,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Victoria Park",
     lat: 51.5362,
     lng: -0.0397,
+    dow: DOW.wed,
     weeksAgo: 4,
     hour: 10,
     minutes: 0,
@@ -600,6 +659,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Well Street Common",
     lat: 51.5427,
     lng: -0.0453,
+    dow: DOW.wed,
     weeksAgo: 3,
     hour: 10,
     minutes: 30,
@@ -614,6 +674,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Regent's Canal towpath, Broadway Market",
     lat: 51.5372,
     lng: -0.063,
+    dow: DOW.sun,
     weeksAgo: 2,
     hour: 10,
     minutes: 0,
@@ -628,8 +689,9 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Victoria Park",
     lat: 51.5362,
     lng: -0.0397,
+    dow: DOW.sat,
     weeksAgo: 1,
-    hour: 10,
+    hour: 9,
     minutes: 0,
     status: "completed",
     source: "discovered",
@@ -643,8 +705,9 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Victoria Park",
     lat: 51.5362,
     lng: -0.0397,
-    daysAhead: 2,
-    hour: 10,
+    dow: DOW.sat,
+    weeksAhead: 0,
+    hour: 9,
     minutes: 0,
     status: "confirmed",
     source: "discovered",
@@ -657,7 +720,8 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "London Fields Lido",
     lat: 51.5399,
     lng: -0.0621,
-    daysAhead: 6,
+    dow: DOW.thu,
+    weeksAhead: 1,
     hour: 11,
     minutes: 0,
     status: "confirmed",
@@ -671,7 +735,8 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Victoria Park Community Garden",
     lat: 51.5375,
     lng: -0.043,
-    daysAhead: 12,
+    dow: DOW.wed,
+    weeksAhead: 2,
     hour: 10,
     minutes: 30,
     status: "proposed",
@@ -687,6 +752,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Highbury Roundhouse Community Centre",
     lat: 51.5502,
     lng: -0.0997,
+    dow: DOW.wed,
     weeksAgo: 5,
     hour: 11,
     minutes: 0,
@@ -701,6 +767,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Sobell Leisure Centre",
     lat: 51.5566,
     lng: -0.112,
+    dow: DOW.fri,
     weeksAgo: 4,
     hour: 11,
     minutes: 0,
@@ -715,6 +782,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Highbury Fields",
     lat: 51.549,
     lng: -0.102,
+    dow: DOW.mon,
     weeksAgo: 3,
     hour: 10,
     minutes: 30,
@@ -729,6 +797,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Highbury Roundhouse Community Centre",
     lat: 51.5502,
     lng: -0.0997,
+    dow: DOW.wed,
     weeksAgo: 2,
     hour: 11,
     minutes: 0,
@@ -743,6 +812,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Barnard Park",
     lat: 51.5389,
     lng: -0.1121,
+    dow: DOW.thu,
     weeksAgo: 1,
     hour: 10,
     minutes: 30,
@@ -758,7 +828,8 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Highbury Roundhouse Community Centre",
     lat: 51.5502,
     lng: -0.0997,
-    daysAhead: 3,
+    dow: DOW.wed,
+    weeksAhead: 0,
     hour: 11,
     minutes: 0,
     status: "confirmed",
@@ -772,7 +843,8 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Sobell Leisure Centre",
     lat: 51.5566,
     lng: -0.112,
-    daysAhead: 8,
+    dow: DOW.fri,
+    weeksAhead: 1,
     hour: 11,
     minutes: 0,
     status: "confirmed",
@@ -786,7 +858,8 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Islington Green",
     lat: 51.538,
     lng: -0.103,
-    daysAhead: 14,
+    dow: DOW.mon,
+    weeksAhead: 2,
     hour: 10,
     minutes: 0,
     status: "proposed",
@@ -802,6 +875,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Regent's Canal towpath, Camden Lock",
     lat: 51.5414,
     lng: -0.1465,
+    dow: DOW.sat,
     weeksAgo: 5,
     hour: 10,
     minutes: 0,
@@ -816,6 +890,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Regent's Park",
     lat: 51.5313,
     lng: -0.157,
+    dow: DOW.sat,
     weeksAgo: 4,
     hour: 9,
     minutes: 30,
@@ -830,6 +905,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Regent's Canal towpath, Camden Lock",
     lat: 51.5414,
     lng: -0.1465,
+    dow: DOW.sun,
     weeksAgo: 3,
     hour: 10,
     minutes: 0,
@@ -844,6 +920,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Primrose Hill",
     lat: 51.539,
     lng: -0.159,
+    dow: DOW.sat,
     weeksAgo: 2,
     hour: 10,
     minutes: 0,
@@ -858,6 +935,7 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Kentish Town City Farm",
     lat: 51.551,
     lng: -0.152,
+    dow: DOW.sat,
     weeksAgo: 1,
     hour: 10,
     minutes: 30,
@@ -873,7 +951,8 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Regent's Canal towpath, Camden Lock",
     lat: 51.5414,
     lng: -0.1465,
-    daysAhead: 4,
+    dow: DOW.sun,
+    weeksAhead: 0,
     hour: 10,
     minutes: 0,
     status: "confirmed",
@@ -887,7 +966,8 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Hampstead Heath",
     lat: 51.5608,
     lng: -0.16,
-    daysAhead: 9,
+    dow: DOW.sat,
+    weeksAhead: 1,
     hour: 10,
     minutes: 0,
     status: "confirmed",
@@ -901,7 +981,8 @@ const EVENT_SEEDS: SeedEvent[] = [
     venueName: "Talacre Gardens",
     lat: 51.546,
     lng: -0.145,
-    daysAhead: 16,
+    dow: DOW.wed,
+    weeksAhead: 2,
     hour: 14,
     minutes: 0,
     status: "proposed",
@@ -923,8 +1004,11 @@ const PRIYA_ATTENDANCE_BY_WEEKS_AGO: Record<number, RsvpStatus | "attended"> = {
   6: "no",
 };
 
-/** Priya's forward-looking RSVPs, keyed by days ahead. Third is left blank on purpose. */
-const PRIYA_UPCOMING_RSVP: Record<number, RsvpStatus> = { 2: "yes", 6: "maybe" };
+/** Priya's forward-looking RSVPs, by title. The third is left blank on purpose. */
+const PRIYA_UPCOMING_RSVP: Record<string, RsvpStatus> = {
+  "Saturday Park Loop": "yes",
+  "Gentle Swim & Sauna": "maybe",
+};
 
 /* ---------------------------------------------------------------- run */
 
@@ -1000,8 +1084,8 @@ async function seed() {
   const eventRows = EVENT_SEEDS.map((e, i) => {
     const startsAt =
       e.weeksAgo !== undefined
-        ? weeksAgo(e.weeksAgo, e.hour, e.minutes)
-        : atDaysFromNow(e.daysAhead!, e.hour, e.minutes);
+        ? pastOn(e.weeksAgo, e.dow, e.hour, e.minutes)
+        : upcomingOn(e.dow, e.weeksAhead ?? 0, e.hour, e.minutes);
     return {
       id: evId(i + 1),
       podId: podId(POD_SEEDS[e.pod]!.n),
@@ -1059,7 +1143,7 @@ async function seed() {
 
       // Upcoming: leave some members undecided so RSVP buttons have something to do.
       if (isPriya) {
-        const own = PRIYA_UPCOMING_RSVP[seedEvent.daysAhead!];
+        const own = PRIYA_UPCOMING_RSVP[seedEvent.title];
         if (own) {
           rsvpRows.push({
             eventId: row.id,

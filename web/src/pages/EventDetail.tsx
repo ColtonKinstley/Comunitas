@@ -34,12 +34,19 @@ export default function EventDetail() {
 
   return (
     <div className="pb-10">
-      <PageHeader title="Activity" subtitle="What, where and who" back />
+      <PageHeader title={data?.title ?? "Activity"} subtitle="What, where and who" back />
 
       <div className="px-5 pt-5">
         {loading && <LoadingNote label="Loading this activity…" />}
 
-        {error && !loading && <ErrorCard message={error} onRetry={reload} />}
+        {/* Never surface the API's wording here — "event id must be a UUID" is
+            not something to show a person. */}
+        {error && !loading && (
+          <ErrorCard
+            message="We couldn't find that activity. It may have been removed, or the link may be wrong."
+            onRetry={reload}
+          />
+        )}
 
         {!loading && !error && !data && (
           <EmptyState

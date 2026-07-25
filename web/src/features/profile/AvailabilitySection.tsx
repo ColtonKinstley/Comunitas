@@ -33,7 +33,9 @@ export function AvailabilitySection({ patient, onSaved }: SectionProps) {
           ? "Tap the times you could usually make."
           : total === 0
             ? "You haven't told us when you're free yet."
-            : `${total} ${total === 1 ? "time" : "times"} a week you could usually make.`}
+            : total === 1
+              ? "You're usually free once a week."
+              : `You're usually free ${total} times a week.`}
       </p>
       <AvailabilityGrid
         availability={shown}

@@ -16,7 +16,9 @@ export function PageHeader({ title, subtitle, back = false, action }: PageHeader
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-10 border-b border-line/70 bg-canvas/95 px-5 pt-6 pb-4 backdrop-blur-sm">
+    // Opaque, not translucent: content scrolling underneath must not stay
+    // legible through the title bar.
+    <header className="sticky top-0 z-10 border-b border-line/70 bg-canvas px-5 pt-6 pb-4 backdrop-blur-md">
       {back && (
         <button
           type="button"

@@ -42,7 +42,7 @@ export function MapLegend({ subtitle, layers, onToggle, counts }: MapLegendProps
             swatch={<Pin />}
           />
           <LegendChip
-            label={`Your pod${counts.members ? ` ${counts.members}` : ""}`}
+            label={`Pod members${counts.members ? ` ${counts.members}` : ""}`}
             active={layers.pod}
             onClick={() => onToggle("pod")}
             swatch={<span className="size-4 rounded-[5px] bg-brand-700" />}

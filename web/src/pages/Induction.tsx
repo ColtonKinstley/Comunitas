@@ -64,8 +64,10 @@ export default function Induction() {
       )}
 
       {(phase === "live" || phase === "completing") && (
-        <div className="flex min-h-full flex-col px-5 pt-6 pb-2">
-          <div className="flex items-center justify-between gap-3">
+        /* The conversation is the screen: it takes every pixel the indicator,
+           the collapsed profile summary and the composer don't need. */
+        <div className="flex min-h-full flex-col px-5 pt-5 pb-0">
+          <div className="flex shrink-0 items-center justify-between gap-3">
             <VoiceIndicator
               assistantSpeaking={assistantSpeaking}
               userSpeaking={userSpeaking}
@@ -74,18 +76,18 @@ export default function Induction() {
             />
           </div>
 
-          <div className="mt-4">
+          {/* Grows into all the space the rest of the column doesn't claim, and
+              never shrinks below a readable few lines. */}
+          <div className="mt-3 flex min-h-[9rem] flex-1 flex-col">
             <Captions captions={captions} />
           </div>
 
-          <div className="mt-4 flex-1">
+          <div className="mt-3 shrink-0">
             <LiveProfileCard profile={profile} />
           </div>
 
-          {mode === "text" && (
-            <TextComposer onSend={sendText} disabled={phase !== "live"} />
-          )}
-          {mode !== "text" && <div className="h-4" />}
+          {mode === "text" && <TextComposer onSend={sendText} disabled={phase !== "live"} />}
+          {mode !== "text" && <div className="h-4 shrink-0" />}
 
           {phase === "completing" && <FindingOverlay />}
         </div>

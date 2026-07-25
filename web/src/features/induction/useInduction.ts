@@ -89,6 +89,13 @@ export function useInduction({ audioRef, initialMode }: UseInductionOptions) {
   const patientIdRef = useRef<string | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const draftRef = useRef<UpdateProfileBody>({});
+  /**
+   * Fields the interviewer has actually told us about. The patients row has
+   * server-side defaults (travel radius is 3 km from the moment the row is
+   * created), and folding those back in made the card claim "Up to 3 km"
+   * before the person had said a word.
+   */
+  const suppliedRef = useRef(new Set<string>());
 
   const activeResponseRef = useRef(false);
   const pendingResponseRef = useRef(false);
@@ -179,10 +186,14 @@ export function useInduction({ audioRef, initialMode }: UseInductionOptions) {
     });
   }, []);
 
-  /** Fold the server's canonical row back in — it carries the geocoded lat/lng. */
+  /**
+   * Fold the server's canonical row back in — it carries the geocoded lat/lng.
+   * Only for fields the interviewer has actually supplied, though: everything
+   * else on that row is a default, not something the person told us.
+   */
   const mergeServerProfile = useCallback(
     (patient: PatientProfile) => {
-      mergeDraft({
+      const canonical: Record<string, unknown> = {
         name: patient.name,
         ageBand: patient.ageBand,
         postcode: patient.postcode,
@@ -198,7 +209,12 @@ export function useInduction({ audioRef, initialMode }: UseInductionOptions) {
         conditions: patient.conditions,
         goals: patient.goals,
         interests: patient.interests,
-      });
+      };
+      const patch: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(canonical)) {
+        if (suppliedRef.current.has(key)) patch[key] = value;
+      }
+      if (Object.keys(patch).length > 0) mergeDraft(patch);
     },
     [mergeDraft],
   );
@@ -262,6 +278,12 @@ export function useInduction({ audioRef, initialMode }: UseInductionOptions) {
         if (name === "update_profile") {
           const patch = sanitizeProfilePatch(args);
           if (!isEmptyPatch(patch)) {
+            for (const key of Object.keys(patch)) suppliedRef.current.add(key);
+            // A postcode is what earns the server-side coordinates.
+            if ("postcode" in patch) {
+              suppliedRef.current.add("lat");
+              suppliedRef.current.add("lng");
+            }
             // Optimistic first: the card should fill in the instant the model
             // says it, not a round trip later.
             mergeDraft(patch as Record<string, unknown>);
@@ -409,6 +431,7 @@ export function useInduction({ audioRef, initialMode }: UseInductionOptions) {
     autoTurnsRef.current = 0;
     callsRef.current.clear();
     draftRef.current = {};
+    suppliedRef.current.clear();
 
     // Mic first: the ephemeral secret is short-lived, so it must be the last
     // thing we fetch before the SDP handshake.

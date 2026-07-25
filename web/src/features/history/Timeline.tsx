@@ -41,10 +41,13 @@ function TimelineRow({ entry, last }: { entry: HistoryEntry; last: boolean }) {
         />
       )}
       <Marker attended={entry.attended} />
-      <div className="min-w-0 flex-1">
-        <Link to={`/events/${entry.id}`} className="block">
-          <h3 className="text-lg text-ink">{entry.title}</h3>
-        </Link>
+      {/* The whole row is the link — a title-sized tap target is not enough. */}
+      <Link
+        to={`/events/${entry.id}`}
+        aria-label={`${entry.title} — see this activity`}
+        className="-my-1 -mr-2 block min-h-[44px] min-w-0 flex-1 rounded-2xl px-2 py-1 transition-colors hover:bg-brand-50"
+      >
+        <h3 className="text-lg text-ink">{entry.title}</h3>
         <p className="mt-0.5 text-base text-ink-soft">{longDate(entry.startsAt)}</p>
         {entry.venueName && (
           <p className="mt-0.5 flex items-start gap-1.5 text-base text-ink-faint">
@@ -60,7 +63,7 @@ function TimelineRow({ entry, last }: { entry: HistoryEntry; last: boolean }) {
         >
           {entry.attended ? "You were there" : "Missed this one"}
         </p>
-      </div>
+      </Link>
     </li>
   );
 }

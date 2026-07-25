@@ -26,8 +26,29 @@ import type {
   UpdateProfileBody,
   UpdateProfileResponse,
 } from "./types";
+import { clearCurrentPatient } from "./patient";
 
 const BASE = "/api";
+
+/**
+ * Requests scoped to one patient — `/patients/<id>` and everything under it.
+ * Deliberately narrow: a 404 from `/events/<id>` means "no such activity", not
+ * "you don't exist", and must never sign anyone out.
+ */
+const PATIENT_SCOPED = /^\/patients\/[^/?#]+(?:[/?#]|$)/;
+
+/**
+ * The stored patient id is the app's whole notion of identity, and a database
+ * reset leaves a stale one behind that 404s on every screen with no way out.
+ * When the patient themselves is gone, forget them and start again at welcome.
+ */
+function forgetMissingPatient(path: string): void {
+  if (!PATIENT_SCOPED.test(path)) return;
+  clearCurrentPatient();
+  if (typeof window !== "undefined" && window.location.pathname !== "/") {
+    window.location.replace("/");
+  }
+}
 
 /** Thrown for any non-2xx response; `message` is the API's `{ error }` string. */
 export class ApiError extends Error {
@@ -58,6 +79,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const data = text ? (JSON.parse(text) as unknown) : null;
 
   if (!res.ok) {
+    if (res.status === 404) forgetMissingPatient(path);
     const message = (data as ApiErrorBody | null)?.error ?? res.statusText ?? "Request failed";
     throw new ApiError(res.status, message);
   }
