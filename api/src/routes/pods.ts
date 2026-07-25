@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { db } from "../db";
-import { pods } from "../db/schema";
-import { fail, requireUuid } from "../lib/http";
-import { loadPodDetail } from "../lib/queries";
-import type { PodDetail, PodSummary } from "../types";
-import { toPodSummary } from "../lib/queries";
+import { db } from "../db/index.js";
+import { pods } from "../db/schema.js";
+import { fail, requireUuid } from "../lib/http.js";
+import { loadPodDetail } from "../lib/queries.js";
+import type { PodDetail, PodSummary } from "../types.js";
+import { toPodSummary } from "../lib/queries.js";
 
 export const podsRoutes = new Hono();
 

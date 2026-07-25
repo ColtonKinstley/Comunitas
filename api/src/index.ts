@@ -2,13 +2,13 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
-import { demoRoutes } from "./routes/demo";
-import { eventsRoutes } from "./routes/events";
-import { inductionRoutes } from "./routes/induction";
-import { patientsRoutes } from "./routes/patients";
-import { podsRoutes } from "./routes/pods";
-import { realtimeRoutes } from "./routes/realtime";
-import type { ApiError } from "./types";
+import { demoRoutes } from "./routes/demo.js";
+import { eventsRoutes } from "./routes/events.js";
+import { inductionRoutes } from "./routes/induction.js";
+import { patientsRoutes } from "./routes/patients.js";
+import { podsRoutes } from "./routes/pods.js";
+import { realtimeRoutes } from "./routes/realtime.js";
+import type { ApiError } from "./types.js";
 
 const app = new Hono();
 

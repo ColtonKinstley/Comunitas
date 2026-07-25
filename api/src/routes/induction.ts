@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { db } from "../db";
-import { inductionSessions } from "../db/schema";
-import { fail, jsonBody, requireUuid } from "../lib/http";
-import type { TranscriptEntry, TranscriptResponse } from "../types";
+import { db } from "../db/index.js";
+import { inductionSessions } from "../db/schema.js";
+import { fail, jsonBody, requireUuid } from "../lib/http.js";
+import type { TranscriptEntry, TranscriptResponse } from "../types.js";
 
 const entrySchema = z.object({
   role: z.enum(["user", "assistant", "system"]),

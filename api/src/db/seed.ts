@@ -15,7 +15,7 @@
 process.env.TZ = "Europe/London";
 
 import { sql as raw } from "drizzle-orm";
-import { db, sql } from "./index";
+import { db, sql } from "./index.js";
 import {
   eventRsvps,
   events,
@@ -26,7 +26,7 @@ import {
   patients,
   podMembers,
   pods,
-} from "./schema";
+} from "./schema.js";
 import type {
   AgeBand,
   Availability,
@@ -34,7 +34,7 @@ import type {
   EventStatus,
   RsvpStatus,
   TransportMode,
-} from "../types";
+} from "../types.js";
 
 /* ------------------------------------------------------------- helpers */
 

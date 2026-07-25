@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { db } from "../db";
-import { eventRsvps, events, patients, pods } from "../db/schema";
-import { fail, jsonBody, queryParams, requireUuid } from "../lib/http";
-import { countRsvps, emptyCounts, firstName, toEventSummary } from "../lib/queries";
-import type { EventDetail, RsvpResponse } from "../types";
+import { db } from "../db/index.js";
+import { eventRsvps, events, patients, pods } from "../db/schema.js";
+import { fail, jsonBody, queryParams, requireUuid } from "../lib/http.js";
+import { countRsvps, emptyCounts, firstName, toEventSummary } from "../lib/queries.js";
+import type { EventDetail, RsvpResponse } from "../types.js";
 
 const rsvpSchema = z
   .object({

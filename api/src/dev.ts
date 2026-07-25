@@ -2,8 +2,8 @@
  * Local entrypoint: Bun reads this default export as its serve config.
  * Production (Vercel) imports `src/index.ts` directly and ignores this file.
  */
-import { env } from "./env";
-import app from "./index";
+import { env } from "./env.js";
+import app from "./index.js";
 
 export default {
   port: env.PORT,

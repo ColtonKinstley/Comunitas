@@ -22,7 +22,7 @@ import type {
   RsvpStatus,
   TranscriptEntry,
   TransportMode,
-} from "../types";
+} from "../types.js";
 
 /**
  * Enum-ish columns are plain `text` narrowed with `$type<>()`. Postgres enums

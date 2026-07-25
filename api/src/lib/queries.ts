@@ -1,5 +1,5 @@
 import { and, count, eq, inArray, sql as raw } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "../db/index.js";
 import {
   eventRsvps,
   events,
@@ -9,7 +9,7 @@ import {
   patients,
   podMembers,
   pods,
-} from "../db/schema";
+} from "../db/schema.js";
 import type {
   EventSummary,
   PatientProfile,
@@ -18,8 +18,8 @@ import type {
   PodSummary,
   RsvpCounts,
   Tag,
-} from "../types";
-import type { EventRow, PatientRow, PodRow } from "../db/schema";
+} from "../types.js";
+import type { EventRow, PatientRow, PodRow } from "../db/schema.js";
 
 export const firstName = (name: string | null) => (name ?? "").trim().split(/\s+/)[0] || "Someone";
 

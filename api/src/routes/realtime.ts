@@ -1,11 +1,11 @@
 import { and, desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { z } from "zod";
-import { db } from "../db";
-import { inductionSessions, patients } from "../db/schema";
-import { env } from "../env";
-import { fail, jsonBody } from "../lib/http";
-import type { RealtimeSessionResponse } from "../types";
+import { db } from "../db/index.js";
+import { inductionSessions, patients } from "../db/schema.js";
+import { env } from "../env.js";
+import { fail, jsonBody } from "../lib/http.js";
+import type { RealtimeSessionResponse } from "../types.js";
 
 /**
  * Voice induction session minting.
