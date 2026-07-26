@@ -10,3 +10,4 @@ build/
 
 # playwright-cli session artifacts
 .playwright-cli/
+.playwright-mcp/
