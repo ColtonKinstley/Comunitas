@@ -14,6 +14,7 @@ import type {
   HistoryResponse,
   InductionSessionStatus,
   MapResponse,
+  MeResponse,
   PatientProfile,
   PodDetail,
   PodSummary,
@@ -103,6 +104,15 @@ export const getHealth = () => request<{ ok: boolean; service: string }>("/healt
 
 /** `{ patientId }` for the seeded demo patient (Priya Shah). */
 export const getDemo = () => request<DemoResponse>("/demo");
+
+/* ------------------------------------------------------------------ me */
+
+/** Session identity and linked patient; both null when signed out / unclaimed. */
+export const getMe = () => request<MeResponse>("/me");
+
+/** Link a freshly-inducted or pre-auth patient to the signed-in user. */
+export const claimPatient = (patientId: string) =>
+  request<MeResponse>("/me/claim", { method: "POST", body: JSON.stringify({ patientId }) });
 
 /* ------------------------------------------------------------ realtime */
 

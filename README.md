@@ -43,6 +43,11 @@ patient-facing loop:
   event venues, and approximate pod-member locations.
 - **Events & history** — upcoming feed with RSVPs, past timeline with
   attendance and adherence streaks.
+- **Sign-in** — an optional "Continue with Google" button on the welcome
+  screen links your browser session to a patient record (via better-auth), so
+  the app remembers you across devices; sign out from Profile. The anonymous
+  flows — voice induction and **Continue as Priya (demo)** — are unaffected
+  and remain the fastest way in.
 
 Pod assignment currently uses a nearest-pod heuristic (geography first, per the
 product thesis); the profile schema is deliberately rich so the real matching
@@ -67,6 +72,7 @@ network. The web dev server proxies `/api` → `http://localhost:3001`.
   (`brew install postgresql@18 && brew services start postgresql@18`)
 - A database named `comunitas`: `createdb comunitas`
 - An `OPENAI_API_KEY` for the voice induction (everything else works without one)
+- Google OAuth credentials for sign-in (optional; the app works anonymously)
 
 ### Setup
 
@@ -79,6 +85,22 @@ bun run db:seed           # load the demo data
 
 `.env` is gitignored. `OPENAI_API_KEY` can be left blank in the file and
 exported in your shell instead — the API falls back to `process.env`.
+
+**Environment variables:**
+
+| Variable               | Purpose                                                                   | Required |
+| ---------------------- | ------------------------------------------------------------------------- | -------- |
+| `BETTER_AUTH_URL`      | Origin the app is opened from. Use the tailscale HTTPS origin when demoing on a phone. | No       |
+| `BETTER_AUTH_SECRET`   | Secret key for auth sessions (run `openssl rand -base64 32` to generate)  | No       |
+| `GOOGLE_CLIENT_ID`     | Google OAuth client (get from console.cloud.google.com/apis/credentials)  | No       |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                                                 | No       |
+
+Sign-in is optional; everything works anonymously without auth configuration.
+
+When Google credentials are set, register `<BETTER_AUTH_URL>/api/auth/callback/google`
+as an authorized redirect URI in the Google Cloud Console for **both** origins you use
+the app from: `http://localhost:5173/api/auth/callback/google` and
+`https://macmini.taildd0824.ts.net/api/auth/callback/google`.
 
 ### Run
 

@@ -1,9 +1,10 @@
-import { ArrowRight, LoaderCircle, Mic, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, LoaderCircle, LogIn, Mic, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button, LinkButton } from "../components/Button";
-import { getDemo } from "../lib/api";
-import { setCurrentPatientId } from "../lib/patient";
+import { claimPatient, getDemo, getMe } from "../lib/api";
+import { authClient } from "../lib/auth";
+import { getCurrentPatientId, setCurrentPatientId } from "../lib/patient";
 
 /**
  * The brand moment. Two ways in: start a fresh voice induction, or step
@@ -12,7 +13,50 @@ import { setCurrentPatientId } from "../lib/patient";
 export default function Welcome() {
   const navigate = useNavigate();
   const [loadingDemo, setLoadingDemo] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Resolves an existing auth session (e.g. landing back here after an OAuth
+  // redirect, or just reopening the app signed in) to the right screen.
+  // Never redirects a signed-out visitor — the welcome screen renders as normal.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const me = await getMe();
+        if (cancelled) return;
+        if (!me.user) return; // signed out — normal welcome screen
+        if (me.patientId) {
+          setCurrentPatientId(me.patientId);
+          navigate("/home", { replace: true });
+          return;
+        }
+        // Signed in but no patient yet: adopt a pre-auth localStorage patient, else induct.
+        const localId = getCurrentPatientId();
+        if (localId) {
+          const claimed = await claimPatient(localId).catch(() => null);
+          if (cancelled) return;
+          if (claimed?.patientId) {
+            setCurrentPatientId(claimed.patientId);
+            navigate("/home", { replace: true });
+            return;
+          }
+        }
+        navigate("/induction", { replace: true });
+      } catch {
+        // API down — welcome screen already handles that via the demo button's error path.
+      }
+    })();
+
+    // Welcome unmounts as soon as the user navigates away (tapping "Start
+    // your induction" or the demo button); without this guard a slow /api/me
+    // or /api/me/claim response could resolve afterwards and hijack that
+    // navigation with a stale redirect.
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
 
   async function continueAsDemo() {
     setLoadingDemo(true);
@@ -24,6 +68,31 @@ export default function Welcome() {
     } catch {
       setError("Couldn't load the demo patient. Check the API is running and the database is seeded.");
       setLoadingDemo(false);
+    }
+  }
+
+  async function continueWithGoogle() {
+    if (loadingGoogle) return;
+    setLoadingGoogle(true);
+    setError(null);
+    try {
+      // better-auth client methods resolve `{ data, error }` rather than
+      // throwing on API/HTTP failure — the try/catch below only covers
+      // network-level rejections, the `error` check is what actually fires
+      // when e.g. no Google client id is configured.
+      const { error: signInError } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+      if (signInError) {
+        setError("Google sign-in isn't configured. Set GOOGLE_CLIENT_ID in .env (see README).");
+        setLoadingGoogle(false);
+      }
+      // On success the browser redirects to Google, so this component
+      // unmounts — no need to reset the flag on that path.
+    } catch {
+      setError("Google sign-in isn't configured. Set GOOGLE_CLIENT_ID in .env (see README).");
+      setLoadingGoogle(false);
     }
   }
 
@@ -65,6 +134,21 @@ export default function Welcome() {
           <Mic size={22} aria-hidden />
           Start your induction
         </LinkButton>
+
+        <Button
+          variant="secondary"
+          size="lg"
+          fullWidth
+          onClick={continueWithGoogle}
+          disabled={loadingGoogle}
+        >
+          {loadingGoogle ? (
+            <LoaderCircle size={22} className="animate-spin" aria-hidden />
+          ) : (
+            <LogIn size={22} aria-hidden />
+          )}
+          {loadingGoogle ? "Redirecting…" : "Continue with Google"}
+        </Button>
 
         <Button
           variant="secondary"

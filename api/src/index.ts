@@ -2,9 +2,12 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
+import { env } from "./env.js";
+import { auth } from "./lib/auth.js";
 import { demoRoutes } from "./routes/demo.js";
 import { eventsRoutes } from "./routes/events.js";
 import { inductionRoutes } from "./routes/induction.js";
+import { meRoutes } from "./routes/me.js";
 import { patientsRoutes } from "./routes/patients.js";
 import { podsRoutes } from "./routes/pods.js";
 import { realtimeRoutes } from "./routes/realtime.js";
@@ -36,6 +39,9 @@ app.use(
 );
 
 app.get("/api/health", (c) => c.json({ ok: true, service: "comunitas-api" }));
+
+app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.route("/api/me", meRoutes);
 
 app.route("/api/demo", demoRoutes);
 app.route("/api/realtime", realtimeRoutes);

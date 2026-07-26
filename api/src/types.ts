@@ -252,3 +252,11 @@ export interface DemoResponse {
   name: string | null;
   podId: string | null;
 }
+
+/* --------------------------------------------------------------- session */
+
+/** GET /api/me — session identity and its linked patient, both null-able. */
+export interface MeResponse {
+  user: { id: string; name: string; email: string } | null;
+  patientId: string | null;
+}
