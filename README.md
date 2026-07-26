@@ -14,13 +14,15 @@ planning the group's activities for them.
 
 [API](https://comunitas-api.vercel.app/api/health) ·
 [Product brief](docs/project-plan.md) ·
-[Induction app design](docs/superpowers/specs/2026-07-25-induction-app-design.md)
+[Development guide](docs/development.md) ·
+[Deployment](docs/deployment.md)
 
 <br />
 
-<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-induction.webp" width="240" alt="Voice induction — an AI interviewer builds your profile in conversation" /></a>&nbsp;
-<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-podmatch.webp" width="240" alt="Pod reveal — matched with local people who share your goals" /></a>&nbsp;
-<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-activity.webp" width="240" alt="Your week — group activities planned and ready to RSVP" /></a>
+<a href="https://comunitas-web.vercel.app/"><img src="images/home.png" height="300" alt="Home — next event with one-tap RSVP and attendance streak" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="images/map.png" height="300" alt="Map — your pod and upcoming events around you" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="images/events.png" height="300" alt="Events — activities suggested by the Comunitas agent" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="images/learn.png" height="300" alt="Learn — bite-sized habit lessons" /></a>
 
 </div>
 
@@ -94,197 +96,12 @@ Pod assignment currently uses a nearest-pod heuristic (geography first, per the
 product thesis); the profile schema is deliberately rich so the real matching
 engine can slot in behind the same API.
 
-### Screenshots
+## Documentation
 
-<table align="center">
-  <tr>
-    <td align="center"><b>Home</b> — next event, one-tap RSVP</td>
-    <td align="center"><b>Learn</b> — bite-sized habit lessons</td>
-    <td align="center"><b>Calendar</b> — the pod's month at a glance</td>
-  </tr>
-  <tr>
-    <td><img src="images/home.png" width="260" alt="Home screen with the next event, RSVP buttons, and what's after that" /></td>
-    <td><img src="images/learn.png" width="260" alt="Learn track with sequential lessons, XP, and locked units" /></td>
-    <td><img src="images/calendar.png" width="260" alt="Calendar month view with confirmed and suggested activity days" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Map</b> — your pod and events around you</td>
-    <td align="center"><b>Events</b> — agent-suggested activities</td>
-    <td align="center"><b>Profile</b> — the matcher-ready profile</td>
-  </tr>
-  <tr>
-    <td><img src="images/map.png" width="260" alt="Map of pod members, travel radius, and upcoming event venues" /></td>
-    <td><img src="images/events.png" width="260" alt="Activities feed with an event suggested by the Comunitas agent" /></td>
-    <td><img src="images/profile.png" width="260" alt="Profile screen with health conditions, goals, and activity level" /></td>
-  </tr>
-</table>
-
-## Development
-
-A bun workspace monorepo:
-
-| Workspace | Stack                                                    | Port |
-| --------- | -------------------------------------------------------- | ---- |
-| `api/`    | Bun + Hono + Drizzle ORM + Postgres                      | 3001 |
-| `web/`    | Vite + React + TypeScript + Tailwind v4 + react-router   | 5173 |
-
-Both servers bind `0.0.0.0`, so you can open the app from another device on the
-network. The web dev server proxies `/api` → `http://localhost:3001`.
-
-### Prerequisites
-
-- [bun](https://bun.sh) 1.3+
-- PostgreSQL 18 running locally on port 5432
-  (`brew install postgresql@18 && brew services start postgresql@18`)
-- A database named `comunitas`: `createdb comunitas`
-- An `OPENAI_API_KEY` for the voice induction (everything else works without one)
-- Google and/or GitHub OAuth credentials for sign-in (optional; the app works anonymously)
-
-### Setup
-
-```sh
-bun install
-cp .env.example .env      # then edit DATABASE_URL if your DB user is not your macOS username
-bun run db:push           # create tables (drizzle-kit push, no migration files)
-bun run db:seed           # load the demo data
-```
-
-`.env` is gitignored. `OPENAI_API_KEY` can be left blank in the file and
-exported in your shell instead — the API falls back to `process.env`.
-
-**Environment variables:**
-
-| Variable               | Purpose                                                                   | Required |
-| ---------------------- | ------------------------------------------------------------------------- | -------- |
-| `BETTER_AUTH_URL`      | Origin the app is opened from. Use the tailscale HTTPS origin when demoing on a phone. | No       |
-| `BETTER_AUTH_SECRET`   | Secret key for auth sessions (run `openssl rand -base64 32` to generate)  | No       |
-| `GOOGLE_CLIENT_ID`     | Google OAuth client (get from console.cloud.google.com/apis/credentials)  | No       |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                                                 | No       |
-| `GITHUB_CLIENT_ID`     | GitHub OAuth app (github.com/settings/developers → OAuth Apps)             | No       |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth app secret                                                    | No       |
-
-Sign-in is optional; everything works anonymously without auth configuration.
-
-When Google credentials are set, register `<BETTER_AUTH_URL>/api/auth/callback/google`
-as an authorized redirect URI in the Google Cloud Console for **both** origins you use
-the app from: `http://localhost:5173/api/auth/callback/google` and
-`https://macmini.taildd0824.ts.net/api/auth/callback/google`.
-
-For GitHub, create an OAuth app at github.com/settings/developers with the
-authorization callback URL `<BETTER_AUTH_URL>/api/auth/callback/github`. GitHub
-OAuth apps allow only one callback URL, so create one app per origin (or just
-one for the origin you demo from).
-
-### Run
-
-```sh
-bun run dev               # api on :3001 and web on :5173, together
-```
-
-Then open <http://localhost:5173>. The root page is the static marketing
-landing page (`web/index.html`); its **Find my pod** buttons lead to
-<http://localhost:5173/welcome>, the app's welcome screen, which offers
-**Start your induction** (new patient, voice interview) or **Continue as
-Priya (demo)**, which loads the seeded demo patient with a five-week
-attendance streak. Every app route lives in `web/app.html` (see the
-`appHtmlFallback` plugin in `web/vite.config.ts`).
-
-### Scripts
-
-| Command              | What it does                                          |
-| -------------------- | ----------------------------------------------------- |
-| `bun run dev`        | Runs the api and web dev servers together             |
-| `bun run db:push`    | Syncs `api/src/db/schema.ts` to Postgres              |
-| `bun run db:seed`    | Truncates and reloads the demo data (idempotent)      |
-| `bun run db:reset`   | `db:push --force` then `db:seed`                      |
-| `bun run db:seed:users` | Seeds fake users into a region (see below)         |
-| `bun run typecheck`  | Typechecks both workspaces                            |
-
-### Seed data
-
-21 patients across Hackney, Bethnal Green, Islington and Camden with real
-postcodes and coordinates, in three pods — Victoria Park Walkers, Islington
-Strength & Balance, Regent's Canal Cyclists. Each pod has five or six completed
-activities with attendance history plus three upcoming ones at real venues. All
-timestamps are relative to the moment you run the seed, so "past" and
-"upcoming" stay correct.
-
-The demo patient is **Priya Shah** (`GET /api/demo` returns her id). She starts
-three lessons into the learn track (the sleep unit plus the first protein
-lesson), so the Learn path lands mid-track with the next lesson lit.
-
-### Seeding demo users
-
-Generate hundreds of realistic fake patients in any geographic region, tagged
-per run and wipeable without touching the demo data or real users:
-
-```sh
-bun run db:seed:users -- --region "Hackney" --count 300 [--radius 4] [--seed 42] [--no-notes]
-bun run db:seed:users -- --list
-bun run db:seed:users -- --wipe hackney-20260725-ab12
-```
-
-`--region` accepts a place name ("Hackney", "Bristol"), a UK postcode
-("E8 3PA"), or an outcode ("E8"). Coordinates cluster naturally inside the
-radius and get real postcodes via postcodes.io. With an `OPENAI_API_KEY` set,
-one batched LLM call adds free-text notes to ~20% of users; `--no-notes` skips
-it. Passing `--seed` makes a run reproducible; omitting it generates fresh
-users each run. The CLI targets whatever `DATABASE_URL` points at.
-
-Every generated patient carries the run's batch id in `patients.seed_batch`;
-wiping deletes exactly `WHERE seed_batch = <batch>` (children cascade), so demo
-data and real users — whose `seed_batch` is null — are never touched.
-
-The same operations exist over HTTP for deployed environments, gated by a
-`SEED_SECRET` env var on the api. When `SEED_SECRET` is unset the endpoint
-404s; when set, requests must carry it in the `x-seed-secret` header:
-
-```sh
-curl -X POST $API/api/admin/seed-users -H 'content-type: application/json' \
-  -H "x-seed-secret: $SEED_SECRET" -d '{"region":"E8","count":200,"radiusKm":4}'
-curl $API/api/admin/seed-users -H "x-seed-secret: $SEED_SECRET"            # list batches
-curl -X DELETE $API/api/admin/seed-users/<batchId> -H "x-seed-secret: $SEED_SECRET"
-```
-
-Re-run `bun run db:reset` before a demo — E2E induction runs and RSVP clicks
-mutate the seed state. A patient id in localStorage that no longer exists after
-a reset is handled: the app clears the session and returns to the welcome screen.
-
-## Deployment (Vercel)
-
-Two Vercel projects deployed from this one repo:
-
-| Project         | Root dir | What Vercel does                                        |
-| --------------- | -------- | ------------------------------------------------------- |
-| `comunitas-api` | `api/`   | Detects Hono (`src/index.ts` default-exports the app); every route becomes a Fluid-compute function |
-| `comunitas-web` | `web/`   | Vite static build; `web/vercel.json` rewrites `/api/*` to the api deployment (same-origin, no CORS) and falls back to `app.html` for react-router (`index.html` is the static landing page at `/`) |
-
-- `api/src/index.ts` exports the bare Hono app for Vercel; local dev goes
-  through `api/src/dev.ts`, which adds the Bun port/hostname config.
-- The api project needs `DATABASE_URL` (a hosted Postgres — use the *pooled*
-  connection string; the client sets `prepare: false` for pooler
-  compatibility) and `OPENAI_API_KEY` env vars.
-- Schema and seed are pushed from a local machine:
-  `DATABASE_URL=<hosted url> bun run db:push && DATABASE_URL=<hosted url> bun run db:seed`.
-- If the api project's URL is not `comunitas-api.vercel.app`, update the
-  rewrite destination in `web/vercel.json`.
-- **Relative imports in `api/src` must carry `.js` extensions** (NodeNext
-  resolution). Vercel compiles the api per-file with tsc, so an extensionless
-  `./routes/demo` fails at runtime with `ERR_MODULE_NOT_FOUND`. Bun, tsx and
-  drizzle-kit all resolve the `.js` specifiers back to `.ts` locally.
-- **`api/` pins TypeScript 5.x** (not the repo-wide TS 7): Vercel's Hono
-  builder loads the local TypeScript's JS compiler API, which TS 7 (the native
-  port) doesn't expose — builds die with
-  `Cannot read properties of undefined (reading 'readFile')`.
-
-### Gotchas
-
-- **`web/src/lib/types.ts` is a manual copy of `api/src/types.ts`.** If you
-  change an API payload, update both — nothing enforces the sync.
-- **Postgres 18 is what's tested.** Older versions will almost certainly work
-  (plain tables, no extensions), but nobody has verified that claim.
-- **Tests only cover the user seeder.** `cd api && bun test` runs the seeder's
-  pure-module tests; everything else is `bun run typecheck` plus manual /
-  Playwright-driven QA.
-- **No `OPENAI_API_KEY`?** Everything works except starting a voice induction —
-  the realtime session endpoint will error, the rest of the app is unaffected.
+| Doc                                                | What's in it                                            |
+| -------------------------------------------------- | ------------------------------------------------------- |
+| [docs/development.md](docs/development.md)         | Monorepo layout, prerequisites, setup, env vars, scripts, gotchas |
+| [api/README.md](api/README.md)                     | API overview, seed data, bulk demo-user seeder, tests   |
+| [docs/deployment.md](docs/deployment.md)           | The two Vercel projects and their build constraints     |
+| [docs/project-plan.md](docs/project-plan.md)       | Product brief                                           |
+| [docs/superpowers/specs](docs/superpowers/specs)   | Design docs (induction app, learn track, user seeder)   |
