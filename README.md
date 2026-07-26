@@ -8,18 +8,19 @@ Comunitas turns a GP's lifestyle prescription into a plan with people in it —
 matching patients into local **pods** of people with similar health goals, then
 planning the group's activities for them.
 
-[**Try the live app →**](https://comunitas-web.vercel.app)
+<a href="https://comunitas-web.vercel.app/">
+  <img src="https://img.shields.io/badge/%E2%96%B6%20%20Try%20the%20live%20app-comunitas--web.vercel.app-143D26?style=for-the-badge&labelColor=2f6b43" alt="Try the live app at comunitas-web.vercel.app" />
+</a>
 
-[Live app](https://comunitas-web.vercel.app) ·
 [API](https://comunitas-api.vercel.app/api/health) ·
 [Product brief](docs/project-plan.md) ·
 [Induction app design](docs/superpowers/specs/2026-07-25-induction-app-design.md)
 
 <br />
 
-<img src="web/public/landing/hero-induction.webp" width="240" alt="Voice induction — an AI interviewer builds your profile in conversation" />&nbsp;
-<img src="web/public/landing/hero-podmatch.webp" width="240" alt="Pod reveal — matched with local people who share your goals" />&nbsp;
-<img src="web/public/landing/hero-activity.webp" width="240" alt="Your week — group activities planned and ready to RSVP" />
+<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-induction.webp" width="240" alt="Voice induction — an AI interviewer builds your profile in conversation" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-podmatch.webp" width="240" alt="Pod reveal — matched with local people who share your goals" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-activity.webp" width="240" alt="Your week — group activities planned and ready to RSVP" /></a>
 
 </div>
 
