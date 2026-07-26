@@ -94,9 +94,13 @@ patient-facing loop:
   Profile. The anonymous flows — voice induction and **Continue as Priya
   (demo)** — are unaffected and remain the fastest way in.
 
-Pod assignment currently uses a nearest-pod heuristic (geography first, per the
-product thesis); the profile schema is deliberately rich so the real matching
-engine can slot in behind the same API.
+Pod assignment is a geography-gated multi-factor matcher: only pods inside the
+patient's travel radius compete, and each is scored on goal, condition and
+interest overlap with its members, fitness-level proximity, and shared
+availability slots (with a soft penalty on oversized pods) — so the matching
+criteria above are actually used, not just collected. The strategies live in
+[`api/src/lib/matching.ts`](api/src/lib/matching.ts) alongside an offline eval
+harness that compares them on generated users.
 
 ## Documentation
 
