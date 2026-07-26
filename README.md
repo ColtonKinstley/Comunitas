@@ -19,10 +19,10 @@ planning the group's activities for them.
 
 <br />
 
-<a href="https://comunitas-web.vercel.app/"><img src="images/home.png" height="330" alt="Home — next event with one-tap RSVP and attendance streak" /></a>&nbsp;
-<a href="https://comunitas-web.vercel.app/"><img src="images/map.png" height="330" alt="Map — your pod and upcoming events around you" /></a>&nbsp;
-<a href="https://comunitas-web.vercel.app/"><img src="images/events.png" height="330" alt="Events — activities suggested by the Comunitas agent" /></a>&nbsp;
-<a href="https://comunitas-web.vercel.app/"><img src="images/learn.png" height="330" alt="Learn — bite-sized habit lessons" /></a>
+<a href="https://comunitas-web.vercel.app/"><img src="images/home.png" height="300" alt="Home — next event with one-tap RSVP and attendance streak" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="images/map.png" height="300" alt="Map — your pod and upcoming events around you" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="images/events.png" height="300" alt="Events — activities suggested by the Comunitas agent" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="images/learn.png" height="300" alt="Learn — bite-sized habit lessons" /></a>
 
 </div>
 
