@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from "react-router";
+import { InductionBanner } from "./components/InductionBanner";
 import { PhoneFrame } from "./components/PhoneFrame";
 import { TabNav } from "./components/TabNav";
 
@@ -11,7 +12,10 @@ export function AppLayout() {
   const showNav = !ROUTES_WITHOUT_NAV.has(pathname) && !LESSON_ROUTE.test(pathname);
 
   return (
-    <PhoneFrame footer={showNav ? <TabNav /> : undefined}>
+    <PhoneFrame
+      header={showNav ? <InductionBanner /> : undefined}
+      footer={showNav ? <TabNav /> : undefined}
+    >
       <Outlet />
     </PhoneFrame>
   );
