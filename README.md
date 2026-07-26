@@ -10,6 +10,8 @@ planning the group's activities for them.
 
 <a href="https://comunitas-web.vercel.app/">
   <img src="https://img.shields.io/badge/%E2%96%B6%20%20Try%20the%20live%20app-comunitas--web.vercel.app-143D26?style=for-the-badge&labelColor=2f6b43" alt="Try the live app at comunitas-web.vercel.app" />
+</a>&nbsp;<a href="https://youtu.be/NTavuBhVAtw">
+  <img src="https://img.shields.io/badge/%E2%96%B6%20%20Watch%20the%20demo-YouTube-CC0000?style=for-the-badge&labelColor=282828&logo=youtube" alt="Watch the demo video on YouTube" />
 </a>
 
 [API](https://comunitas-api.vercel.app/api/health) ·
