@@ -33,28 +33,34 @@ export * from "./auth-schema.js";
  * loop fast while TypeScript still enforces the vocabulary.
  */
 
-export const patients = pgTable("patients", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  // Nullable: the realtime induction creates the row before it learns a name.
-  name: text("name"),
-  ageBand: text("age_band").$type<AgeBand>(),
-  postcode: text("postcode"),
-  lat: real("lat"),
-  lng: real("lng"),
-  travelRadiusKm: integer("travel_radius_km").notNull().default(3),
-  transportModes: text("transport_modes").array().$type<TransportMode[]>(),
-  mobilityNotes: text("mobility_notes"),
-  confidenceLevel: integer("confidence_level"),
-  fitnessLevel: integer("fitness_level"),
-  fitnessNotes: text("fitness_notes"),
-  availability: jsonb("availability").$type<Availability>(),
-  inductionStatus: text("induction_status").$type<InductionStatus>().notNull().default("pending"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  /** Auth identity (better-auth user). Null for demo/seed patients and pre-auth inductions. */
-  userId: text("user_id")
-    .unique()
-    .references(() => user.id, { onDelete: "set null" }),
-});
+export const patients = pgTable(
+  "patients",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Nullable: the realtime induction creates the row before it learns a name.
+    name: text("name"),
+    ageBand: text("age_band").$type<AgeBand>(),
+    postcode: text("postcode"),
+    lat: real("lat"),
+    lng: real("lng"),
+    travelRadiusKm: integer("travel_radius_km").notNull().default(3),
+    transportModes: text("transport_modes").array().$type<TransportMode[]>(),
+    mobilityNotes: text("mobility_notes"),
+    confidenceLevel: integer("confidence_level"),
+    fitnessLevel: integer("fitness_level"),
+    fitnessNotes: text("fitness_notes"),
+    availability: jsonb("availability").$type<Availability>(),
+    inductionStatus: text("induction_status").$type<InductionStatus>().notNull().default("pending"),
+    // Set only on generated demo users; wipe = DELETE WHERE seed_batch = $1.
+    seedBatch: text("seed_batch"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Auth identity (better-auth user). Null for demo/seed patients and pre-auth inductions. */
+    userId: text("user_id")
+      .unique()
+      .references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [index("patients_seed_batch_idx").on(t.seedBatch)],
+);
 
 export const patientConditions = pgTable(
   "patient_conditions",
