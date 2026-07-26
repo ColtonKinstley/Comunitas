@@ -9,9 +9,12 @@
  * typed instead of spoken — that path is what headless QA drives.
  */
 import { AlertTriangle, Keyboard, LoaderCircle, Mic, ShieldCheck, Sparkles } from "lucide-react";
-import { useRef } from "react";
-import { useSearchParams } from "react-router";
+import { useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { Button, LinkButton } from "../components/Button";
+import { createMyPatient } from "../lib/api";
+import { authClient } from "../lib/auth";
+import { setCurrentPatientId } from "../lib/patient";
 import { Captions } from "../features/induction/Captions";
 import { LiveProfileCard } from "../features/induction/LiveProfileCard";
 import { PodReveal } from "../features/induction/PodReveal";
@@ -103,6 +106,30 @@ export default function Induction() {
 /* ---------------------------------------------------------------- intro */
 
 function Intro({ mode, onStart }: { mode: "voice" | "text"; onStart: () => void }) {
+  const navigate = useNavigate();
+  const { data: session } = authClient.useSession();
+  const [skipping, setSkipping] = useState(false);
+  const [skipError, setSkipError] = useState(false);
+
+  // A signed-in user can skip the induction: create their bare patient record
+  // so the rest of the app (profile, sign-out) is reachable. "Not now" would
+  // trap them — the welcome screen bounces a signed-in, patient-less visitor
+  // straight back here.
+  async function skip() {
+    if (skipping) return;
+    setSkipping(true);
+    setSkipError(false);
+    try {
+      const { patientId } = await createMyPatient();
+      if (!patientId) throw new Error("no patient");
+      setCurrentPatientId(patientId);
+      navigate("/profile", { replace: true });
+    } catch {
+      setSkipError(true);
+      setSkipping(false);
+    }
+  }
+
   return (
     <div className="flex min-h-full flex-col px-6 pt-12 pb-8">
       <div className="flex flex-1 flex-col">
@@ -156,9 +183,28 @@ function Intro({ mode, onStart }: { mode: "voice" | "text"; onStart: () => void 
             to typing automatically.
           </p>
         )}
-        <LinkButton to="/" variant="ghost" size="md" fullWidth>
-          Not now
-        </LinkButton>
+        {session ? (
+          <>
+            {skipError && (
+              <p role="alert" className="text-center text-sm text-danger-700">
+                Couldn't skip right now — try again.
+              </p>
+            )}
+            <Button
+              variant="ghost"
+              size="md"
+              fullWidth
+              onClick={() => void skip()}
+              disabled={skipping}
+            >
+              {skipping ? "Setting up…" : "Skip for now — do this later"}
+            </Button>
+          </>
+        ) : (
+          <LinkButton to="/" variant="ghost" size="md" fullWidth>
+            Not now
+          </LinkButton>
+        )}
       </div>
     </div>
   );

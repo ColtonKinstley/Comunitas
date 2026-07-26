@@ -117,6 +117,9 @@ export const getMe = () => request<MeResponse>("/me");
 export const claimPatient = (patientId: string) =>
   request<MeResponse>("/me/claim", { method: "POST", body: JSON.stringify({ patientId }) });
 
+/** Create (or fetch) the signed-in user's bare patient when skipping the induction. */
+export const createMyPatient = () => request<MeResponse>("/me/patient", { method: "POST" });
+
 /* ------------------------------------------------------------ realtime */
 
 /**

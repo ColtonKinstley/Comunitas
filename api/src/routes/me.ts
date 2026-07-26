@@ -41,6 +41,36 @@ meRoutes.get("/", async (c) => {
 });
 
 /**
+ * Create a bare patient for a signed-in user who skips the induction, so the
+ * rest of the app (profile, sign-out) is reachable. Idempotent: returns the
+ * existing link when one is already there.
+ */
+meRoutes.post("/patient", async (c) => {
+  const user = await sessionUser(c.req.raw.headers);
+  if (!user) return c.json({ error: "not signed in" }, 401);
+
+  let patientId = await linkedPatientId(user.id);
+  if (!patientId) {
+    try {
+      const inserted = await db
+        .insert(patients)
+        .values({ name: user.name || null, userId: user.id })
+        .returning({ id: patients.id });
+      patientId = inserted[0]?.id ?? null;
+    } catch {
+      // `userId` is unique — lost a race to a concurrent claim/skip.
+      patientId = await linkedPatientId(user.id);
+    }
+    if (!patientId) return c.json({ error: "could not create patient" }, 500);
+  }
+
+  return c.json<MeResponse>({
+    user: { id: user.id, name: user.name, email: user.email },
+    patientId,
+  });
+});
+
+/**
  * Attach an unclaimed patient (fresh induction, or a pre-auth localStorage id)
  * to the signed-in user. First-writer-wins: a patient already linked to a
  * different user is a 409, not a steal.
