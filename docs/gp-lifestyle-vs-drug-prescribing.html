@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UK GPs: Lifestyle vs Drug Prescribing</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:       #f9f9f7;
+    --surface-1:  #fcfcfb;
+    --ink-1:      #0b0b0b;
+    --ink-2:      #52514e;
+    --muted:      #898781;
+    --grid:       #e1e0d9;
+    --baseline:   #c3c2b7;
+    --border:     rgba(11,11,11,0.10);
+    --s-lifestyle:#2a78d6;   /* categorical slot 1 — the lifestyle pathway */
+    --s-drug:     #eb6834;   /* categorical slot 2 — the drug pathway */
+    --deemph:     #c3c2b7;   /* de-emphasis gray (context series) */
+    --ord-1: #1c5cab; --ord-2: #2a78d6; --ord-3: #5598e7; --ord-4: #86b6ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:       #0d0d0d;
+      --surface-1:  #1a1a19;
+      --ink-1:      #ffffff;
+      --ink-2:      #c3c2b7;
+      --muted:      #898781;
+      --grid:       #2c2c2a;
+      --baseline:   #383835;
+      --border:     rgba(255,255,255,0.10);
+      --s-lifestyle:#3987e5;
+      --s-drug:     #d95926;
+      --deemph:     #52514e;
+      --ord-1: #3987e5; --ord-2: #5598e7; --ord-3: #86b6ef; --ord-4: #b7d3f6;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:       #0d0d0d;
+    --surface-1:  #1a1a19;
+    --ink-1:      #ffffff;
+    --ink-2:      #c3c2b7;
+    --muted:      #898781;
+    --grid:       #2c2c2a;
+    --baseline:   #383835;
+    --border:     rgba(255,255,255,0.10);
+    --s-lifestyle:#3987e5;
+    --s-drug:     #d95926;
+    --deemph:     #52514e;
+    --ord-1: #3987e5; --ord-2: #5598e7; --ord-3: #86b6ef; --ord-4: #b7d3f6;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink-1);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 32px 16px 64px;
+  }
+  main { max-width: 960px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 26px; font-weight: 650; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); margin-top: 6px; max-width: 70ch; }
+  .theme-btn {
+    float: right; border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--ink-2); border-radius: 8px; padding: 5px 12px; font: inherit;
+    font-size: 13px; cursor: pointer;
+  }
+  h2 { font-size: 18px; font-weight: 650; margin: 40px 0 12px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .tile {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .tile .label { font-size: 13px; color: var(--ink-2); }
+  .tile .value { font-size: 30px; font-weight: 600; margin-top: 2px; }
+  .tile .note  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px 14px; margin-top: 16px;
+  }
+  .card h3 { font-size: 15.5px; font-weight: 650; }
+  .card .desc { font-size: 13px; color: var(--ink-2); margin: 3px 0 14px; max-width: 78ch; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin-bottom: 10px; }
+  .legend .key { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .chart { width: 100%; }
+  .chart svg { display: block; width: 100%; height: auto; }
+  .src { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .src a { color: inherit; }
+  details { margin-top: 8px; font-size: 13px; }
+  summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
+  table { border-collapse: collapse; margin-top: 8px; width: 100%; }
+  th, td { text-align: left; padding: 5px 10px 5px 0; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  th { color: var(--ink-2); font-weight: 600; font-size: 12.5px; }
+
+  #tooltip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 11px; font-size: 12.5px; box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    max-width: 280px;
+  }
+  #tooltip .t-val { font-size: 15px; font-weight: 650; color: var(--ink-1); }
+  #tooltip .t-lab { color: var(--ink-2); display: flex; align-items: center; gap: 6px; margin-top: 1px; }
+  #tooltip .t-key { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+  #tooltip .t-note { color: var(--muted); margin-top: 3px; font-size: 11.5px; }
+
+  .bar-hit { cursor: default; }
+  .bar-hit:focus { outline: none; }
+  .bar-hit:hover .bar, .bar-hit:focus .bar { filter: brightness(1.12); }
+  footer { margin-top: 48px; font-size: 13px; color: var(--ink-2); max-width: 78ch; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <button class="theme-btn" id="themeBtn" type="button">Toggle theme</button>
+    <h1>Pills by the billion, lifestyle by the thousand</h1>
+    <p class="sub">How often UK GPs prescribe lifestyle change versus medication — scale, delivery
+    gaps, adherence and outcomes. England data, compiled July 2026. Full sourced dossier:
+    <a href="./gp-lifestyle-vs-drug-prescribing.md">gp-lifestyle-vs-drug-prescribing.md</a>.</p>
+  </header>
+
+  <section class="kpis" aria-label="Headline figures">
+    <div class="tile"><div class="label">Prescription items dispensed</div><div class="value">1.26bn</div><div class="note">England, 2024/25 · NHSBSA</div></div>
+    <div class="tile"><div class="label">GP appointments</div><div class="value">367M</div><div class="note">England, 2024 · NHS England</div></div>
+    <div class="tile"><div class="label">Social prescribing referrals</div><div class="value">1.3M</div><div class="note">2023 · Lancet Public Health</div></div>
+    <div class="tile"><div class="label">Average GP consultation</div><div class="value">9.2 min</div><div class="note">among Europe's shortest · BMJ Open</div></div>
+  </section>
+
+  <h2>1 · The scale gap</h2>
+  <div class="card">
+    <h3>Annual volume: drug items vs structured lifestyle referrals</h3>
+    <p class="desc">Structured lifestyle referrals (social prescribing + Diabetes Prevention
+    Programme + digital weight management) total well under 0.5% of prescription-item volume —
+    about one lifestyle referral per 220 GP appointments, versus ~3.4 drug items per appointment.
+    The lifestyle bar is drawn at minimum visible width; the true ratio is ~740:1.</p>
+    <div class="legend" id="legend-scale"></div>
+    <div class="chart" id="chart-scale"></div>
+    <p class="src">Sources: NHSBSA Prescription Cost Analysis 2024/25 · Lancet Public Health 2025 · NHS England programme statistics. Lifestyle total is a derived estimate.</p>
+    <details><summary>View data as table</summary><div class="tbl"></div></details>
+  </div>
+
+  <h2>2 · Advice inside the consultation</h2>
+  <div class="card">
+    <h3>Share of eligible patients who actually receive lifestyle advice or support</h3>
+    <p class="desc">Advice tracks payment incentives: smoking advice (QOF-incentivised) reaches
+    half of smokers, while alcohol advice reaches almost nobody. Verbal advice is under-recorded,
+    so these are best-available recall/record figures — treat as approximate.</p>
+    <div class="chart" id="chart-advice"></div>
+    <p class="src">Sources: BJGP 2016 (n=15,252) · Addiction 2020 · BJGP 2017 systematic review · PMC 2016 alcohol screening studies.</p>
+    <details><summary>View data as table</summary><div class="tbl"></div></details>
+  </div>
+
+  <h2>3 · Guidance says lifestyle-first; volumes say otherwise</h2>
+  <div class="card">
+    <h3>Depression pathway, England (people per year)</h3>
+    <p class="desc">NICE recommends talking therapies and exercise for mild-to-moderate depression.
+    In practice, ~13 people receive antidepressants for every one who completes a course of NHS
+    talking therapy.</p>
+    <div class="legend" id="legend-dep"></div>
+    <div class="chart" id="chart-dep"></div>
+    <p class="src">Sources: NHSBSA Medicines Used in Mental Health 2024/25 · NHS Talking Therapies annual report 2023/24.</p>
+    <details><summary>View data as table</summary><div class="tbl"></div></details>
+  </div>
+
+  <h2>4 · The referral funnel</h2>
+  <div class="card">
+    <h3>NHS Diabetes Prevention Programme: from referral to completion</h3>
+    <p class="desc">The characteristic shape of every NHS lifestyle programme: most attrition
+    happens before the programme even starts. Completing is associated with a 37% reduction in
+    diabetes risk; even referral alone is associated with a 20% reduction.</p>
+    <div class="chart" id="chart-funnel"></div>
+    <p class="src">Sources: Valabhji et al., Diabetes Care 2020 · Diabetic Medicine scoping review 2022 · Ravindrarajah et al., PLOS Medicine 2023.</p>
+    <details><summary>View data as table</summary><div class="tbl"></div></details>
+  </div>
+
+  <h2>5 · Adherence: neither side looks good</h2>
+  <div class="card">
+    <h3>Sticking with it: medication adherence vs lifestyle programme completion</h3>
+    <p class="desc">30–50% of medicines for long-term conditions aren't taken as recommended
+    (NICE) — so ~50% adherence is the honest drug-side benchmark. Lifestyle completion among
+    people who start is in the same range; the difference is the pre-start leak shown in
+    chart 4, which drug statistics never capture.</p>
+    <div class="legend" id="legend-adh"></div>
+    <div class="chart" id="chart-adh"></div>
+    <p class="src">Sources: NICE CG76/WHO 2003 · Diabetes Care 2020 · Obesity 2024 · Pavey HTA 2011 · NACR 2017/18 · Practical Diabetes 2018.</p>
+    <details><summary>View data as table</summary><div class="tbl"></div></details>
+  </div>
+
+  <h2>6 · Outcomes when lifestyle is properly supported</h2>
+  <div class="card">
+    <h3>Smoking: validated abstinence one year after the quit attempt</h3>
+    <p class="desc">NHS stop-smoking support roughly doubles long-term quit success — from a low
+    base. (The headline "53.8% quit rate" reported by services is self-reported at just 4 weeks;
+    the honest 12-month, carbon-monoxide-validated figure is shown here.)</p>
+    <div class="chart" id="chart-quit"></div>
+    <p class="src">Sources: ELONS study, NIHR 2016 · NCBI review of unaided quitting · NHS England stop smoking statistics 2023/24.</p>
+    <details><summary>View data as table</summary><div class="tbl"></div></details>
+  </div>
+
+  <div class="card">
+    <h3>Preventing type 2 diabetes: lifestyle beats the drug head-to-head</h3>
+    <p class="desc">In the landmark US Diabetes Prevention Program trial (n=3,234, cited in UK
+    NICE guidance), intensive lifestyle intervention nearly doubled the risk reduction achieved
+    by metformin. UK real-world echo: DiRECT achieved 46% diet-induced diabetes remission at
+    1 year in trial conditions; the NHS rollout achieves 32% among completers.</p>
+    <div class="legend" id="legend-dpp"></div>
+    <div class="chart" id="chart-dpp"></div>
+    <p class="src">Source: Knowler et al., NEJM 2002 — reduction in diabetes incidence vs placebo over ~2.8 years.</p>
+    <details><summary>View data as table</summary><div class="tbl"></div></details>
+  </div>
+
+  <h2>7 · How patients get lifestyle-change information</h2>
+  <div class="card">
+    <h3>The channel landscape</h3>
+    <p class="desc">More than seven distinct channels carry meaning here, so this one is a table
+    by design. Effectiveness evidence favours brief personal advice with follow-up over passive
+    materials; text-message support has the strongest digital evidence.</p>
+    <table>
+      <thead><tr><th>Channel</th><th>Example / model</th><th>Reach</th><th>Effectiveness signal</th></tr></thead>
+      <tbody>
+        <tr><td>Very brief advice in consultation</td><td>Smoking "Ask–Advise–Act" (30s, NCSCT); alcohol AUDIT-C; NICE PH44 activity advice</td><td>~50% of smokers; &lt;10% of risky drinkers</td><td>1 extra quitter per ~33 advised; 1 in 12 more active at 12 months</td></tr>
+        <tr><td>Social prescribing link workers</td><td>Community groups, debt advice, walking groups</td><td>~3,600 link workers; 1.3M referrals/yr</td><td>Evidence base weak — high risk of bias in evaluations</td></tr>
+        <tr><td>Structured programmes</td><td>NHS DPP (9 months), Digital Weight Management (12 weeks), stop smoking services</td><td>~1M DPP starters since 2016; 265K quit attempts/yr</td><td>Dose–response: completers lose ~2× the weight; quit odds ~2× unaided</td></tr>
+        <tr><td>NHS Health Check</td><td>40–74s, 5-yearly CVD check with mandated brief advice + signposting</td><td>52.6% uptake (25–85% by local authority)</td><td>Advice/referral coded for &gt;2.5M people with risk factors</td></tr>
+        <tr><td>Digital self-serve</td><td>nhs.uk Better Health, Couch to 5K, NHS Quit Smoking app, Try Dry</td><td>NHS App 39M users; C25K 7M+ downloads</td><td>Text-messaging strongest (Cochrane RR ~1.5); standalone apps ≈ minimal support</td></tr>
+        <tr><td>Printed materials</td><td>Leaflets accompanying consultations</td><td>Ubiquitous</td><td>Help only when paired with personalised verbal advice</td></tr>
+        <tr><td>Group / community</td><td>DESMOND/X-PERT education, cardiac rehab, parkrun practices (2,000+ surgeries), Ramblers walks, Healthy Living Pharmacies (9,400+)</td><td>Education offered to ~90% of new T2D patients</td><td>&lt;10% attend education; 50% cardiac rehab uptake, 37% complete</td></tr>
+      </tbody>
+    </table>
+    <p class="src">Sources: NCSCT · NICE PH44/PH49/NG92 · Cochrane CD000165 &amp; CD006611 · Orrow BMJ 2012 · King's Fund · NHS England. Full citations in the markdown dossier.</p>
+  </div>
+
+  <footer>
+    <p><strong>Caveats.</strong> No national register of "lifestyle prescriptions" exists; social
+    prescribing counts come from GP-record research, not routine statistics. Verbal advice is
+    systematically under-recorded, so consultation figures are lower bounds. Drug adherence and
+    programme completion are different constructs — compare funnels, not single percentages.
+    Real-world programme effects run ~30–50% below trial efficacy. See the
+    <a href="./gp-lifestyle-vs-drug-prescribing.md">full dossier</a> for every source.</p>
+  </footer>
+</main>
+
+<div id="tooltip" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- theme toggle ---------- */
+  var root = document.documentElement;
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var dark = root.dataset.theme === 'dark' ||
+      (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.dataset.theme = dark ? 'light' : 'dark';
+  });
+
+  /* ---------- tooltip ---------- */
+  var tip = document.getElementById('tooltip');
+  function showTip(evt, row) {
+    tip.textContent = '';
+    var v = document.createElement('div'); v.className = 't-val'; v.textContent = row.display;
+    var l = document.createElement('div'); l.className = 't-lab';
+    var k = document.createElement('span'); k.className = 't-key'; k.style.background = row.color;
+    l.appendChild(k); l.appendChild(document.createTextNode(row.label));
+    tip.appendChild(v); tip.appendChild(l);
+    if (row.note) { var n = document.createElement('div'); n.className = 't-note'; n.textContent = row.note; tip.appendChild(n); }
+    tip.style.display = 'block';
+    var x = evt.clientX !== undefined ? evt.clientX : evt.target.getBoundingClientRect().right;
+    var y = evt.clientY !== undefined ? evt.clientY : evt.target.getBoundingClientRect().top;
+    var r = tip.getBoundingClientRect();
+    tip.style.left = Math.min(x + 14, innerWidth - r.width - 8) + 'px';
+    tip.style.top  = Math.min(y + 14, innerHeight - r.height - 8) + 'px';
+  }
+  function hideTip() { tip.style.display = 'none'; }
+
+  /* ---------- svg helpers ---------- */
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  // horizontal bar: square at baseline (left), 4px rounded at the data end (right)
+  function hbarPath(x, y, w, h, r) {
+    r = Math.min(r, w, h / 2);
+    return 'M' + x + ' ' + y + 'h' + (w - r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r +
+           'v' + (h - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + (-r) + ' ' + r +
+           'h' + (r - w) + 'z';
+  }
+  // vertical column: square at baseline (bottom), rounded on top
+  function vbarPath(x, y, w, h, r) {
+    r = Math.min(r, h, w / 2);
+    return 'M' + x + ' ' + (y + h) + 'v' + (-(h - r)) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + (-r) +
+           'h' + (w - 2 * r) + 'a' + r + ' ' + r + ' 0 0 1 ' + r + ' ' + r +
+           'v' + (h - r) + 'z';
+  }
+  function attachHover(hit, row) {
+    hit.classList.add('bar-hit');
+    hit.setAttribute('tabindex', '0');
+    hit.setAttribute('role', 'img');
+    hit.setAttribute('aria-label', row.label + ': ' + row.display + (row.note ? '. ' + row.note : ''));
+    hit.addEventListener('pointermove', function (e) { showTip(e, row); });
+    hit.addEventListener('pointerleave', hideTip);
+    hit.addEventListener('focus', function (e) { showTip(e, row); });
+    hit.addEventListener('blur', hideTip);
+  }
+
+  /* ---------- horizontal bar chart ---------- */
+  // rows: {label, value, display, color, note}
+  function hBarChart(id, rows, opts) {
+    opts = opts || {};
+    var W = 900, labelW = opts.labelW || 300, pad = 8, rowH = 44, barH = 22, axisH = opts.ticks ? 26 : 6;
+    var H = rows.length * rowH + axisH + pad;
+    var plotW = W - labelW - 90;
+    var max = opts.max || Math.max.apply(null, rows.map(function (r) { return r.value; })) * 1.06;
+    var host = document.getElementById(id);
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H }, host);
+
+    if (opts.ticks) {
+      opts.ticks.forEach(function (t) {
+        var x = labelW + (t / max) * plotW;
+        el('line', { x1: x, y1: pad, x2: x, y2: H - axisH + 2, stroke: 'var(--grid)', 'stroke-width': 1 }, svg);
+        el('text', { x: x, y: H - 6, 'text-anchor': 'middle', 'font-size': 11.5, fill: 'var(--muted)' }, svg)
+          .textContent = opts.tickFmt ? opts.tickFmt(t) : t;
+      });
+    }
+    el('line', { x1: labelW, y1: pad, x2: labelW, y2: H - axisH + 2, stroke: 'var(--baseline)', 'stroke-width': 1 }, svg);
+
+    rows.forEach(function (row, i) {
+      var y = pad + i * rowH + (rowH - barH) / 2;
+      var w = Math.max((row.value / max) * plotW, 2);
+      var g = el('g', {}, svg);
+      var lab = el('text', { x: labelW - 10, y: y + barH / 2 + 4, 'text-anchor': 'end', 'font-size': 13, fill: 'var(--ink-2)' }, g);
+      lab.textContent = row.label;
+      el('path', { d: hbarPath(labelW + 1, y, w, barH, 4), fill: row.color, 'class': 'bar' }, g);
+      var val = el('text', { x: labelW + w + 9, y: y + barH / 2 + 4.5, 'font-size': 13, 'font-weight': 650, fill: 'var(--ink-1)' }, g);
+      val.textContent = row.display;
+      // transparent hit area spanning the row (>= 24px target)
+      var hit = el('rect', { x: 0, y: pad + i * rowH, width: W, height: rowH, fill: 'transparent' }, g);
+      attachHover(g, row);
+      void hit;
+    });
+    fillTable(host, rows, opts.tableCols);
+  }
+
+  /* ---------- vertical funnel ---------- */
+  function funnelChart(id, rows) {
+    var W = 900, H = 300, padT = 34, padB = 46, colW = 130, gap = (W - rows.length * colW) / (rows.length + 1);
+    var host = document.getElementById(id);
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H }, host);
+    el('line', { x1: 0, y1: H - padB, x2: W, y2: H - padB, stroke: 'var(--baseline)', 'stroke-width': 1 }, svg);
+    var max = rows[0].value;
+    rows.forEach(function (row, i) {
+      var x = gap + i * (colW + gap);
+      var h = Math.max((row.value / max) * (H - padT - padB), 3);
+      var y = H - padB - h;
+      var g = el('g', {}, svg);
+      el('path', { d: vbarPath(x, y, colW, h, 4), fill: row.color, 'class': 'bar' }, g);
+      var val = el('text', { x: x + colW / 2, y: y - 8, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 650, fill: 'var(--ink-1)' }, g);
+      val.textContent = row.display;
+      var lab = el('text', { x: x + colW / 2, y: H - padB + 18, 'text-anchor': 'middle', 'font-size': 12.5, fill: 'var(--ink-2)' }, g);
+      lab.textContent = row.label;
+      if (row.sub) {
+        var s = el('text', { x: x + colW / 2, y: H - padB + 34, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--muted)' }, g);
+        s.textContent = row.sub;
+      }
+      el('rect', { x: x - gap / 2, y: 0, width: colW + gap, height: H, fill: 'transparent' }, g);
+      attachHover(g, row);
+    });
+    fillTable(host, rows);
+  }
+
+  /* ---------- table twin ---------- */
+  function fillTable(chartHost, rows, cols) {
+    var card = chartHost.closest('.card');
+    var tbl = card && card.querySelector('.tbl');
+    if (!tbl) return;
+    var t = document.createElement('table');
+    var thead = document.createElement('thead'); var trh = document.createElement('tr');
+    (cols || ['Item', 'Value']).forEach(function (c) {
+      var th = document.createElement('th'); th.textContent = c; trh.appendChild(th);
+    });
+    thead.appendChild(trh); t.appendChild(thead);
+    var tb = document.createElement('tbody');
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+      var td1 = document.createElement('td'); td1.textContent = r.label + (r.sub ? ' (' + r.sub + ')' : '');
+      var td2 = document.createElement('td'); td2.textContent = r.display + (r.note ? ' — ' + r.note : '');
+      tr.appendChild(td1); tr.appendChild(td2); tb.appendChild(tr);
+    });
+    t.appendChild(tb); tbl.appendChild(t);
+  }
+
+  function legend(id, items) {
+    var host = document.getElementById(id);
+    items.forEach(function (it) {
+      var k = document.createElement('span'); k.className = 'key';
+      var s = document.createElement('span'); s.className = 'swatch'; s.style.background = it.color;
+      k.appendChild(s); k.appendChild(document.createTextNode(it.label));
+      host.appendChild(k);
+    });
+  }
+
+  var LIFE = 'var(--s-lifestyle)', DRUG = 'var(--s-drug)', GRAY = 'var(--deemph)';
+
+  /* 1 — scale gap */
+  legend('legend-scale', [{ color: DRUG, label: 'Drug pathway' }, { color: LIFE, label: 'Lifestyle pathway' }]);
+  hBarChart('chart-scale', [
+    { label: 'Prescription items dispensed', value: 1260, display: '1.26bn / yr', color: DRUG,
+      note: 'England 2024/25, NHSBSA — cost £11.2bn' },
+    { label: 'Structured lifestyle referrals', value: 1.7, display: '≈1.7M / yr', color: LIFE,
+      note: 'Social prescribing 1.3M + NHS DPP ~0.2M + digital weight mgmt ~0.18M (derived estimate)' }
+  ], { labelW: 280, tableCols: ['Pathway', 'Annual volume'] });
+
+  /* 2 — advice gap (single series → no legend) */
+  hBarChart('chart-advice', [
+    { label: 'Smokers recalling GP quit advice', value: 50.4, display: '50.4%', color: LIFE, note: 'QOF-incentivised · BJGP 2016' },
+    { label: 'Smokers offered cessation support', value: 30.1, display: '30.1%', color: LIFE, note: 'Referral or medication · Addiction 2020' },
+    { label: 'Obese patients with recorded intervention', value: 10, display: '≈10%', color: LIFE, note: '~90% have none recorded · BJGP 2017' },
+    { label: 'High-risk drinkers recalling alcohol advice', value: 6.5, display: '6.5%', color: LIFE, note: 'Not incentivised · BJGP 2016' },
+    { label: 'Heavy drinkers receiving brief advice', value: 3, display: '≈3%', color: LIFE, note: 'Of those who could benefit · PMC 2016' }
+  ], { max: 100, ticks: [0, 25, 50, 75, 100], tickFmt: function (t) { return t + '%'; }, labelW: 330, tableCols: ['Measure', 'Share'] });
+
+  /* 3 — depression pathway */
+  legend('legend-dep', [{ color: DRUG, label: 'Drug pathway' }, { color: LIFE, label: 'Non-drug pathway' }]);
+  hBarChart('chart-dep', [
+    { label: 'Prescribed antidepressants', value: 8.89, display: '8.89M people', color: DRUG, note: '92.6M items, 2024/25 · NHSBSA' },
+    { label: 'Accessed NHS Talking Therapies', value: 1.26, display: '1.26M people', color: LIFE, note: '2023/24 · NHS England' },
+    { label: 'Completed a course of treatment', value: 0.67, display: '0.67M people', color: LIFE, note: '2023/24 · NHS England' }
+  ], { labelW: 300, tableCols: ['Pathway stage', 'People per year'] });
+
+  /* 4 — DPP funnel (ordinal ramp) */
+  funnelChart('chart-funnel', [
+    { label: 'Referred', sub: '533,998 by 2020', value: 100, display: '100%', color: 'var(--ord-1)' },
+    { label: 'Attended assessment', sub: '40–53% of referrals', value: 47, display: '≈47%', color: 'var(--ord-2)' },
+    { label: 'Started sessions', sub: '36–38% of referrals', value: 37, display: '≈37%', color: 'var(--ord-3)' },
+    { label: 'Completed programme', sub: '≥60% of sessions', value: 19, display: '≈19%', color: 'var(--ord-4)', note: 'Completion → −3.2 kg, 37% lower T2D risk' }
+  ]);
+
+  /* 5 — adherence comparison */
+  legend('legend-adh', [{ color: DRUG, label: 'Medication' }, { color: LIFE, label: 'Lifestyle programme (of starters)' }]);
+  hBarChart('chart-adh', [
+    { label: 'Long-term medicines taken as recommended', value: 50, display: '≈50%', color: DRUG, note: 'NICE CG76: 30–50% not taken as recommended; WHO ~50%' },
+    { label: 'NHS DPP completion', value: 52, display: '≈52%', color: LIFE, note: 'Of those who started sessions · Diabetes Care 2020' },
+    { label: 'Digital Weight Mgmt completion', value: 45, display: '45%', color: LIFE, note: 'Of starters with time to finish · Obesity 2024' },
+    { label: 'Exercise referral adherence', value: 41, display: '37–45%', color: LIFE, note: 'Pooled estimate · Pavey HTA 2011' },
+    { label: 'Cardiac rehab ≥8 weeks', value: 37, display: '37%', color: LIFE, note: 'Of those starting rehab · NACR' },
+    { label: 'Diabetes structured education attendance', value: 8, display: '<10%', color: LIFE, note: 'Of ~90% offered · National Diabetes Audit' }
+  ], { max: 100, ticks: [0, 25, 50, 75, 100], tickFmt: function (t) { return t + '%'; }, labelW: 350, tableCols: ['Measure', 'Rate'] });
+
+  /* 6 — quit rates (emphasis: service blue, unaided gray) */
+  hBarChart('chart-quit', [
+    { label: 'With NHS stop-smoking service', value: 8, display: '≈8%', color: LIFE, note: 'CO-validated at 1 year · ELONS/NIHR 2016' },
+    { label: 'Unaided quit attempt', value: 4, display: '3–8% (≈4%)', color: GRAY, note: 'Long-term success of unsupported attempts' }
+  ], { max: 20, ticks: [0, 5, 10, 15, 20], tickFmt: function (t) { return t + '%'; }, labelW: 300, tableCols: ['Quit route', '12-month validated success'] });
+
+  /* 7 — head-to-head efficacy */
+  legend('legend-dpp', [{ color: LIFE, label: 'Lifestyle intervention' }, { color: DRUG, label: 'Metformin' }]);
+  hBarChart('chart-dpp', [
+    { label: 'Intensive lifestyle programme', value: 58, display: '−58%', color: LIFE, note: 'Diet + 150 min/wk activity, ~7% weight-loss goal' },
+    { label: 'Metformin 850mg twice daily', value: 31, display: '−31%', color: DRUG, note: 'Standard first-line diabetes drug' }
+  ], { max: 100, ticks: [0, 25, 50, 75, 100], tickFmt: function (t) { return t + '%'; }, labelW: 300, tableCols: ['Intervention', 'Reduction in diabetes incidence vs placebo'] });
+})();
+</script>
+</body>
+</html>
