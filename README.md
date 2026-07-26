@@ -39,7 +39,12 @@ patient-facing loop:
   one track, mix info cards with quick check questions, and award 10 XP each;
   progress is stored on the server so it follows the patient across devices.
 - **Profile** — the structured, matcher-ready profile; every section
-  tap-to-edit, postcodes geocoded via postcodes.io.
+  tap-to-edit, postcodes geocoded via postcodes.io. An Induction card lets you
+  finish a skipped induction or redo a completed one (the conversation resumes
+  on the same patient and re-runs pod matching).
+- **Skippable induction** — signed-in users can skip the induction from its
+  intro screen (a bare patient record is created so the rest of the app works);
+  a banner pinned above every screen offers the way back in until it's done.
 - **Pod** — who you're matched with (first names and shared interests only —
   no one else's health data), and where the group meets.
 - **Calendar** — month view with per-day agenda of pod activities.

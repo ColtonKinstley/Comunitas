@@ -2,9 +2,9 @@
  * The structured profile — everything the matcher uses, grouped into five
  * sections that each edit in place.
  */
-import { LogOut, TriangleAlert } from "lucide-react";
+import { LogOut, Mic, TriangleAlert } from "lucide-react";
 import { useNavigate } from "react-router";
-import { Button } from "../components/Button";
+import { Button, LinkButton } from "../components/Button";
 import { Card } from "../components/Card";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
@@ -62,6 +62,34 @@ export default function Profile() {
             <HealthSection patient={patient} onSaved={setPatient} />
             <InterestsSection patient={patient} onSaved={setPatient} />
             <AvailabilitySection patient={patient} onSaved={setPatient} />
+
+            {/* The shared demo persona can't redo — the API rejects it too. */}
+            {patient.name !== "Priya Shah" && (
+              <Card>
+                <h2 className="flex items-center gap-2 text-lg text-ink">
+                  <span className="text-brand-600" aria-hidden>
+                    <Mic size={22} />
+                  </span>
+                  Induction
+                </h2>
+                <p className="mt-1 text-sm text-ink-faint">
+                  {patient.inductionStatus === "complete"
+                    ? "Things changed? Have the chat again to refresh your profile — your pod match may change too."
+                    : "A five-minute chat that fills in your profile and matches you with a pod."}
+                </p>
+                <LinkButton
+                  to="/induction?resume=1"
+                  variant="secondary"
+                  fullWidth
+                  className="mt-4"
+                >
+                  <Mic size={18} aria-hidden />
+                  {patient.inductionStatus === "complete"
+                    ? "Redo your induction"
+                    : "Finish your induction"}
+                </LinkButton>
+              </Card>
+            )}
           </>
         )}
 

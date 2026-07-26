@@ -68,9 +68,15 @@ export interface UseInductionOptions {
   /** Where remote audio is piped. Rendered by the page as `<audio autoPlay />`. */
   audioRef: React.RefObject<HTMLAudioElement | null>;
   initialMode: Mode;
+  /**
+   * Resume/redo onto this patient instead of creating a fresh one — used by
+   * the "finish your induction" banner and the profile redo. Absent for
+   * first-time visitors, who get a new patient row.
+   */
+  initialPatientId?: string | null;
 }
 
-export function useInduction({ audioRef, initialMode }: UseInductionOptions) {
+export function useInduction({ audioRef, initialMode, initialPatientId }: UseInductionOptions) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [mode, setMode] = useState<Mode>(initialMode);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +93,7 @@ export function useInduction({ audioRef, initialMode }: UseInductionOptions) {
   const dcRef = useRef<RTCDataChannel | null>(null);
   const micRef = useRef<MediaStream | null>(null);
 
-  const patientIdRef = useRef<string | null>(null);
+  const patientIdRef = useRef<string | null>(initialPatientId ?? null);
   const sessionIdRef = useRef<string | null>(null);
   const draftRef = useRef<UpdateProfileBody>({});
   /**

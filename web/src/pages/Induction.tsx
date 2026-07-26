@@ -14,7 +14,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { Button, LinkButton } from "../components/Button";
 import { createMyPatient } from "../lib/api";
 import { authClient } from "../lib/auth";
-import { setCurrentPatientId } from "../lib/patient";
+import { getCurrentPatientId, setCurrentPatientId } from "../lib/patient";
 import { Captions } from "../features/induction/Captions";
 import { LiveProfileCard } from "../features/induction/LiveProfileCard";
 import { PodReveal } from "../features/induction/PodReveal";
@@ -33,10 +33,14 @@ export default function Induction() {
   const [params] = useSearchParams();
   const audioRef = useRef<HTMLAudioElement>(null);
   const textOnly = params.get("mode") === "text";
+  // `?resume=1` (banner, profile redo) continues on the current patient
+  // instead of minting a fresh one.
+  const resume = params.get("resume") === "1";
 
   const induction = useInduction({
     audioRef,
     initialMode: textOnly ? "text" : "voice",
+    initialPatientId: resume ? getCurrentPatientId() : null,
   });
 
   const {

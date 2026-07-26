@@ -35,7 +35,7 @@ export function InductionBanner() {
 
   return (
     <Link
-      to="/induction"
+      to="/induction?resume=1"
       className="flex items-center gap-2.5 border-b border-accent-200 bg-accent-100 px-5 py-2.5 text-sm font-medium text-accent-700"
     >
       <Mic size={16} className="shrink-0" aria-hidden />

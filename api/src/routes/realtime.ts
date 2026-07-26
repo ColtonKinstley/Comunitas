@@ -5,6 +5,7 @@ import { db } from "../db/index.js";
 import { inductionSessions, patients } from "../db/schema.js";
 import { env } from "../env.js";
 import { fail, jsonBody } from "../lib/http.js";
+import { DEMO_NAME } from "./demo.js";
 import type { RealtimeSessionResponse } from "../types.js";
 
 /**
@@ -295,6 +296,9 @@ realtimeRoutes.post("/session", jsonBody(bodySchema), async (c) => {
   if (resumeId) {
     const [existing] = await db.select().from(patients).where(eq(patients.id, resumeId)).limit(1);
     if (!existing) fail(404, "patient not found");
+    // Redoing the shared demo persona would flip her induction status and
+    // overwrite her profile for every other visitor.
+    if (existing.name === DEMO_NAME) fail(403, "the demo patient's induction can't be redone");
     patientId = existing.id;
 
     if (existing.inductionStatus !== "in_progress") {
