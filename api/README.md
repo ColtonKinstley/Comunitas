@@ -60,8 +60,30 @@ curl $API/api/admin/seed-users -H "x-seed-secret: $SEED_SECRET"            # lis
 curl -X DELETE $API/api/admin/seed-users/<batchId> -H "x-seed-secret: $SEED_SECRET"
 ```
 
+## Pod matching
+
+`src/lib/matching.ts` is a pure module (no DB imports) that decides which pod
+a patient joins at the end of induction. All strategies share the same
+geography gate — only pods inside the patient's travel radius compete on fit;
+nothing in range → nearest pod wins outright; no coordinates on either side →
+smallest pod:
+
+- `matchNearest` — the original baseline: most member-shared interests inside
+  the radius, distance breaks ties.
+- `matchComposite` — weighted sum of geo decay plus goal/condition/interest
+  overlap with the pod's member profile, fitness proximity and availability
+  fit, with a soft size penalty above 12 members.
+- `matchAffinity` — mean pairwise patient↔member similarity (Jaccard on
+  goals/interests/conditions/availability slots, fitness closeness), scaled by
+  the same geo decay and size factor.
+
+`chooseBestPod` is the strategy wired into
+`POST /api/patients/:id/complete-induction` — currently `matchComposite`,
+picked by the offline eval. Compare the strategies on generated users (no DB,
+no network) with `bun run eval:matching`.
+
 ## Tests
 
-`bun test` from this directory runs the user seeder's pure-module tests — the
-only automated tests in the repo; everything else is `bun run typecheck` plus
-manual / Playwright-driven QA.
+`bun test` from this directory runs the pure-module tests (the user seeder and
+the pod matcher) — the only automated tests in the repo; everything else is
+`bun run typecheck` plus manual / Playwright-driven QA.

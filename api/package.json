@@ -10,6 +10,7 @@
     "db:seed:users": "bun src/db/seed-users.ts",
     "db:reset": "drizzle-kit push --force && bun src/db/seed.ts",
     "test": "bun test",
+    "eval:matching": "bun src/lib/matching.eval.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
