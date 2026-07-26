@@ -44,8 +44,14 @@ export const auth = betterAuth({
         }
       : {}),
   },
+  // BETTER_AUTH_URL covers whatever origin the deployment is served from
+  // (e.g. the Vercel web app); the literals keep local/tailnet dev working
+  // regardless of what it's set to.
   trustedOrigins: [
-    "http://localhost:5173",
-    "https://macmini.taildd0824.ts.net",
+    ...new Set([
+      "http://localhost:5173",
+      "https://macmini.taildd0824.ts.net",
+      env.BETTER_AUTH_URL,
+    ]),
   ],
 });
