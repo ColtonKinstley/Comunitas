@@ -1,26 +1,54 @@
+<div align="center">
+
 # Comunitas
 
-Most GP perceptions and almost all preventative medicine isn't for drugs - it's
-lifestyle intervention. When a patient is given given this advice they are
-typically handed a pamphlet and sent on their way. Development of a program,
-adherence and support are all left up to the patient. Very little if any
-support is available despite adherence and success in a program being critical
-to the acute and long term health of the patient. 
+### Healthy change, made together.
 
-**Comunitas** helps patients with similar health goals find community and
-activities to support their health journey. We match patients and activities
-geographically with a focus on existing health conditions and lifestyle goals.
-We use sophisticated machine learning methods to match patients together with
-appropriate activities on their existing health conditions, goals, and starting
-fitness state. Our AI activity booking agents take the overhead out of
-planning, managing, and organizing events. No single person is responsible for
-event planning. Events will be discovered from what's already popular in your
-area or created ad-hoc. In an inversion of the typical meetup process, the
-group is decided first, and the event is chosen to match their needs.
+Comunitas turns a GP's lifestyle prescription into a plan with people in it —
+matching patients into local **pods** of people with similar health goals, then
+planning the group's activities for them.
 
-See [docs/project-plan.md](docs/project-plan.md) for the product brief and
-[docs/superpowers/specs/2026-07-25-induction-app-design.md](docs/superpowers/specs/2026-07-25-induction-app-design.md)
-for the induction app design.
+[**Try the live app →**](https://comunitas-web.vercel.app)
+
+[Live app](https://comunitas-web.vercel.app) ·
+[API](https://comunitas-api.vercel.app/api/health) ·
+[Product brief](docs/project-plan.md) ·
+[Induction app design](docs/superpowers/specs/2026-07-25-induction-app-design.md)
+
+<br />
+
+<img src="web/public/landing/hero-induction.webp" width="240" alt="Voice induction — an AI interviewer builds your profile in conversation" />&nbsp;
+<img src="web/public/landing/hero-podmatch.webp" width="240" alt="Pod reveal — matched with local people who share your goals" />&nbsp;
+<img src="web/public/landing/hero-activity.webp" width="240" alt="Your week — group activities planned and ready to RSVP" />
+
+</div>
+
+---
+
+## Why
+
+Most GP prescriptions for prevention aren't drugs — they're **lifestyle
+interventions**: move more, sleep better, eat differently. But when a patient
+receives that advice, they're typically handed a pamphlet and sent on their
+way. Building a programme, staying adherent, and finding support are all left
+to the patient alone — even though adherence is what actually determines the
+health outcome.
+
+## What Comunitas does
+
+Comunitas gives every lifestyle prescription a community and a calendar:
+
+- **Match people first, plan events second.** In an inversion of the usual
+  meetup model, patients are grouped into pods by geography, health
+  conditions, goals, and starting fitness — then activities are chosen to fit
+  the group, discovered from what's already popular nearby or created ad hoc.
+- **No organiser burden.** AI booking agents handle the planning, scheduling,
+  and coordination. No single member is responsible for keeping the group
+  alive.
+- **Support the habit, not just the event.** Bite-sized lessons, attendance
+  streaks, and a shared calendar keep the programme going between sessions.
+
+Built at the Juno Health hackathon (London, July 2026).
 
 ## The app
 
@@ -56,15 +84,20 @@ patient-facing loop:
 - **Events & history** — upcoming feed with RSVPs, past timeline with
   attendance and adherence streaks.
 - **Sign-in** — optional "Continue with Google" / "Continue with GitHub"
-  buttons on the welcome
-  screen link your browser session to a patient record (via better-auth), so
-  the app remembers you across devices; sign out from Profile. The anonymous
-  flows — voice induction and **Continue as Priya (demo)** — are unaffected
-  and remain the fastest way in.
+  buttons on the welcome screen link your browser session to a patient record
+  (via better-auth), so the app remembers you across devices; sign out from
+  Profile. The anonymous flows — voice induction and **Continue as Priya
+  (demo)** — are unaffected and remain the fastest way in.
 
 Pod assignment currently uses a nearest-pod heuristic (geography first, per the
 product thesis); the profile schema is deliberately rich so the real matching
 engine can slot in behind the same API.
+
+<div align="center">
+<img src="web/public/landing/learn-foundations.png" width="240" alt="Learn track — sequential habit lessons" />&nbsp;
+<img src="web/public/landing/learn-lesson.png" width="240" alt="A lesson — info cards with quick check questions" />&nbsp;
+<img src="web/public/landing/snapshot-priya.webp" width="240" alt="Home — next event, pod snapshot, attendance streak" />
+</div>
 
 ## Development
 
