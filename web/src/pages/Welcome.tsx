@@ -96,7 +96,14 @@ export default function Welcome() {
         callbackURL: "/welcome",
       });
       if (signInError) {
-        setError(notConfigured);
+        // A 5xx is a server-side failure (bad DB schema, missing tables) —
+        // telling the user to "set CLIENT_ID" there sends them down the wrong
+        // road entirely.
+        setError(
+          (signInError.status ?? 0) >= 500
+            ? "Sign-in failed on the server. Check the API logs — usually the database schema is behind the deployed code."
+            : notConfigured,
+        );
         setLoadingProvider(null);
       }
       // On success the browser redirects to the provider, so this component
