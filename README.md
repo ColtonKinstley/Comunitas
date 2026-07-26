@@ -30,7 +30,7 @@ planning the group's activities for them.
 
 ## Why
 
-Most GP prescriptions for prevention aren't drugs — they're **lifestyle
+Most GP prescriptions aren't drugs — they're **lifestyle
 interventions**: move more, sleep better, eat differently. But when a patient
 receives that advice, they're typically handed a pamphlet and sent on their
 way. Building a programme, staying adherent, and finding support are all left
