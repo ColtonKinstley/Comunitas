@@ -11,14 +11,16 @@ import {
   podMembers,
   pods,
 } from "../db/schema.js";
-import { haversineKm, jitterCoord, roundKm } from "../lib/geo.js";
+import { jitterCoord, roundKm } from "../lib/geo.js";
 import { geocodePostcode } from "../lib/geocode.js";
 import { fail, jsonBody, queryParams, requireUuid } from "../lib/http.js";
+import { chooseBestPod } from "../lib/matching.js";
 import {
   countRsvps,
   emptyCounts,
   firstName,
   getPatientRow,
+  loadMatchInputs,
   loadPatientProfile,
   myRsvpMap,
   toEventSummary,
@@ -207,38 +209,6 @@ patientsRoutes.patch("/:id/profile", jsonBody(updateProfileSchema), async (c) =>
   return c.json<UpdateProfileResponse>({ patient, ...(warning ? { warning } : {}) });
 });
 
-/**
- * Shared-interest overlap between this patient and a pod: for every interest
- * they have, how many of that pod's members share it. Counting members rather
- * than distinct slugs is what makes it discriminate — nearly every pod has
- * *somebody* who cycles, but only one of them is the cycling pod.
- *
- * One round trip, then a pure lookup — the matcher calls it once per pod.
- */
-async function sharedInterestScorer(patientId: string): Promise<(podId: string) => number> {
-  const slug = (s: string) => s.trim().toLowerCase();
-
-  const [mineRows, memberRows] = await Promise.all([
-    db
-      .select({ interest: patientInterests.interest })
-      .from(patientInterests)
-      .where(eq(patientInterests.patientId, patientId)),
-    db
-      .select({ podId: podMembers.podId, interest: patientInterests.interest })
-      .from(podMembers)
-      .innerJoin(patientInterests, eq(patientInterests.patientId, podMembers.patientId)),
-  ]);
-
-  const mine = new Set(mineRows.map((r) => slug(r.interest)));
-  const tally = new Map<string, number>();
-  for (const row of memberRows) {
-    if (!mine.has(slug(row.interest))) continue;
-    tally.set(row.podId, (tally.get(row.podId) ?? 0) + 1);
-  }
-
-  return (podId) => tally.get(podId) ?? 0;
-}
-
 /* -------------------------- POST /api/patients/:id/complete-induction */
 
 patientsRoutes.post("/:id/complete-induction", async (c) => {
@@ -246,45 +216,13 @@ patientsRoutes.post("/:id/complete-induction", async (c) => {
   const patient = await getPatientRow(id);
   if (!patient) fail(404, "patient not found");
 
-  const allPods = await db.select().from(pods);
-  const podSizes = await db
-    .select({ podId: podMembers.podId, patientId: podMembers.patientId })
-    .from(podMembers);
-  const sizeOf = new Map<string, number>();
-  for (const m of podSizes) sizeOf.set(m.podId, (sizeOf.get(m.podId) ?? 0) + 1);
-
-  const overlapWith = await sharedInterestScorer(id);
-
-  /**
-   * Assignment heuristic (the real matcher is out of scope). Geography first,
-   * because that is the whole product thesis: among the pods inside the
-   * patient's travel radius, prefer the one whose members share the most
-   * interests, and break ties on distance. If nothing is in range, the nearest
-   * pod wins outright; with no coordinates at all, the smallest pod.
-   */
-  let chosen: (typeof allPods)[number] | null = null;
-  let distanceKm: number | null = null;
-
-  const located = allPods.filter((p) => p.centroidLat !== null && p.centroidLng !== null);
-  if (patient.lat !== null && patient.lng !== null && located.length > 0) {
-    const ranked = located
-      .map((pod) => ({
-        pod,
-        km: haversineKm(patient.lat!, patient.lng!, pod.centroidLat!, pod.centroidLng!),
-        shared: overlapWith(pod.id),
-      }))
-      .sort((a, b) => a.km - b.km);
-    const withinRadius = [...ranked]
-      .filter((r) => r.km <= patient.travelRadiusKm)
-      .sort((a, b) => b.shared - a.shared || a.km - b.km);
-    const best = withinRadius[0] ?? ranked[0]!;
-    chosen = best.pod;
-    distanceKm = roundKm(best.km);
-  } else if (allPods.length > 0) {
-    chosen = [...allPods].sort(
-      (a, b) => (sizeOf.get(a.id) ?? 0) - (sizeOf.get(b.id) ?? 0) || a.name.localeCompare(b.name),
-    )[0]!;
-  }
+  // The matcher itself is pure (`src/lib/matching.ts` — geography-gated,
+  // scored on goals/conditions/fitness/availability/interests); this route
+  // only loads its inputs, records the membership, and shapes the response.
+  const { candidate, pods: matchPods, podRows } = await loadMatchInputs(patient);
+  const decision = chooseBestPod(candidate, matchPods);
+  const chosen = decision.podId ? (podRows.get(decision.podId) ?? null) : null;
+  const distanceKm = decision.distanceKm === null ? null : roundKm(decision.distanceKm);
 
   await db.transaction(async (tx) => {
     await tx
@@ -297,11 +235,17 @@ patientsRoutes.post("/:id/complete-induction", async (c) => {
     }
   });
 
+  // Member lists exclude the inducting patient, so size + 1 is the count
+  // after the insert above.
+  const memberCount = chosen
+    ? (matchPods.find((p) => p.id === chosen.id)?.members.length ?? 0) + 1
+    : 0;
+
   const profile = await loadPatientProfile(id);
   if (!profile) fail(404, "patient not found");
   return c.json<CompleteInductionResponse>({
     patient: profile,
-    pod: chosen ? toPodSummary(chosen, (sizeOf.get(chosen.id) ?? 0) + 1) : null,
+    pod: chosen ? toPodSummary(chosen, memberCount) : null,
     distanceKm,
   });
 });

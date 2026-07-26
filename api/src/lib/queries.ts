@@ -19,6 +19,7 @@ import type {
   RsvpCounts,
   Tag,
 } from "../types.js";
+import type { MatchCandidate, MatchPod } from "./matching.js";
 import type { EventRow, PatientRow, PodRow } from "../db/schema.js";
 
 export const firstName = (name: string | null) => (name ?? "").trim().split(/\s+/)[0] || "Someone";
@@ -177,6 +178,82 @@ export async function loadPodDetail(podId: string): Promise<PodDetail | null> {
     members,
     sharedInterests,
     createdAt: iso(pod.createdAt)!,
+  };
+}
+
+/* ---------------------------------------------------------- pod matching */
+
+export interface MatchInputs {
+  candidate: MatchCandidate;
+  pods: MatchPod[];
+  /** Full pod rows keyed by id, for shaping the response after a decision. */
+  podRows: Map<string, PodRow>;
+}
+
+/**
+ * Everything the pure matcher (`src/lib/matching.ts`) needs, in six round
+ * trips regardless of pod or member count: pods, memberships, then the member
+ * patient rows and all three tag tables batched with `inArray` — never a
+ * per-member query. The inducting patient is excluded from member lists: a
+ * re-run induction re-matches from scratch, so they must not count toward
+ * their old pod's profile or size.
+ */
+export async function loadMatchInputs(patient: PatientRow): Promise<MatchInputs> {
+  const [podRows, membershipRows] = await Promise.all([
+    db.select().from(pods),
+    db.select({ podId: podMembers.podId, patientId: podMembers.patientId }).from(podMembers),
+  ]);
+
+  const memberships = membershipRows.filter((m) => m.patientId !== patient.id);
+  const memberIds = [...new Set(memberships.map((m) => m.patientId))];
+  const allIds = [...memberIds, patient.id];
+
+  const [memberRows, conditionRows, goalRows, interestRows] = await Promise.all([
+    memberIds.length
+      ? db.select().from(patients).where(inArray(patients.id, memberIds))
+      : Promise.resolve([] as PatientRow[]),
+    db.select().from(patientConditions).where(inArray(patientConditions.patientId, allIds)),
+    db.select().from(patientGoals).where(inArray(patientGoals.patientId, allIds)),
+    db.select().from(patientInterests).where(inArray(patientInterests.patientId, allIds)),
+  ]);
+
+  const push = (map: Map<string, string[]>, id: string, slug: string) =>
+    map.set(id, [...(map.get(id) ?? []), slug]);
+  const conditionsBy = new Map<string, string[]>();
+  for (const r of conditionRows) push(conditionsBy, r.patientId, r.condition);
+  const goalsBy = new Map<string, string[]>();
+  for (const r of goalRows) push(goalsBy, r.patientId, r.goal);
+  const interestsBy = new Map<string, string[]>();
+  for (const r of interestRows) push(interestsBy, r.patientId, r.interest);
+
+  const toCandidate = (row: PatientRow): MatchCandidate => ({
+    lat: row.lat,
+    lng: row.lng,
+    travelRadiusKm: row.travelRadiusKm,
+    fitnessLevel: row.fitnessLevel,
+    conditions: conditionsBy.get(row.id) ?? [],
+    goals: goalsBy.get(row.id) ?? [],
+    interests: interestsBy.get(row.id) ?? [],
+    availability: row.availability ?? {},
+  });
+
+  const rowById = new Map(memberRows.map((r) => [r.id, r] as const));
+  const membersByPod = new Map<string, MatchCandidate[]>();
+  for (const m of memberships) {
+    const row = rowById.get(m.patientId);
+    if (!row) continue;
+    membersByPod.set(m.podId, [...(membersByPod.get(m.podId) ?? []), toCandidate(row)]);
+  }
+
+  return {
+    candidate: toCandidate(patient),
+    pods: podRows.map((p) => ({
+      id: p.id,
+      centroidLat: p.centroidLat,
+      centroidLng: p.centroidLng,
+      members: membersByPod.get(p.id) ?? [],
+    })),
+    podRows: new Map(podRows.map((p) => [p.id, p] as const)),
   };
 }
 
