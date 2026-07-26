@@ -18,9 +18,9 @@ planning the group's activities for them.
 
 <br />
 
-<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-induction.webp" width="240" alt="Voice induction — an AI interviewer builds your profile in conversation" /></a>&nbsp;
-<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-podmatch.webp" width="240" alt="Pod reveal — matched with local people who share your goals" /></a>&nbsp;
-<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-activity.webp" width="240" alt="Your week — group activities planned and ready to RSVP" /></a>
+<a href="https://comunitas-web.vercel.app/"><img src="images/hero-induction.png" height="400" alt="Voice induction — an AI interviewer builds your profile in conversation" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="images/hero-podmatch.png" height="400" alt="Pod reveal — matched with local people who share your goals" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="images/hero-activity.png" height="400" alt="Your week — group activities planned and ready to RSVP" /></a>
 
 </div>
 
