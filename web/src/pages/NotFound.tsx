@@ -35,7 +35,7 @@ function Lost({ title, message }: LostProps) {
         <LinkButton to="/home" size="lg" fullWidth>
           Take me home
         </LinkButton>
-        <LinkButton to="/" variant="ghost" size="md" fullWidth>
+        <LinkButton to="/welcome" variant="ghost" size="md" fullWidth>
           Back to the start
         </LinkButton>
       </div>
