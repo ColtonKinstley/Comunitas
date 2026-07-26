@@ -233,10 +233,11 @@ const sessionConfig = (model: string) => ({
     audio: {
       input: {
         transcription: { model: "gpt-4o-mini-transcribe", language: "en" },
-        // Semantic VAD waits for a *complete thought* rather than a silence
-        // threshold — older speakers pause mid-sentence and server_vad
-        // interrupts them.
-        turn_detection: { type: "semantic_vad" },
+        // No automatic VAD: the client is push-to-talk. It commits the input
+        // buffer and requests a response when the person releases the button.
+        // (Semantic VAD kept mis-detecting turns — pauses read as done, and
+        // background noise read as speech.)
+        turn_detection: null,
       },
       output: { voice: "marin" },
     },

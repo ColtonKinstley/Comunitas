@@ -31,9 +31,9 @@ export function VoiceIndicator({
 
   const copy = {
     speaking: typed ? "Typing…" : "Speaking…",
-    listening: typed ? "Reading your answer…" : "Listening…",
+    listening: typed ? "Reading your answer…" : "Listening — release to send",
     thinking: "Thinking…",
-    idle: typed ? "Type your answer below" : "Go ahead — I'm listening",
+    idle: typed ? "Type your answer below" : "Hold the button to talk",
   }[state];
 
   const Icon = {

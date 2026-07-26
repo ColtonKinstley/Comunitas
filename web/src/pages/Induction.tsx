@@ -18,6 +18,7 @@ import { getCurrentPatientId, setCurrentPatientId } from "../lib/patient";
 import { Captions } from "../features/induction/Captions";
 import { LiveProfileCard } from "../features/induction/LiveProfileCard";
 import { PodReveal } from "../features/induction/PodReveal";
+import { PushToTalk } from "../features/induction/PushToTalk";
 import { TextComposer } from "../features/induction/TextComposer";
 import { VoiceIndicator } from "../features/induction/VoiceIndicator";
 import { InductionStyles } from "../features/induction/styles";
@@ -56,6 +57,9 @@ export default function Induction() {
     start,
     retry,
     sendText,
+    startTalking,
+    stopTalking,
+    switchToText,
   } = induction;
 
   return (
@@ -93,8 +97,17 @@ export default function Induction() {
             <LiveProfileCard profile={profile} />
           </div>
 
-          {mode === "text" && <TextComposer onSend={sendText} disabled={phase !== "live"} />}
-          {mode !== "text" && <div className="h-4 shrink-0" />}
+          {mode === "text" ? (
+            <TextComposer onSend={sendText} disabled={phase !== "live"} />
+          ) : (
+            <PushToTalk
+              holding={userSpeaking}
+              disabled={phase !== "live"}
+              onStart={startTalking}
+              onStop={stopTalking}
+              onSwitchToText={switchToText}
+            />
+          )}
 
           {phase === "completing" && <FindingOverlay />}
         </div>
@@ -150,7 +163,7 @@ function Intro({ mode, onStart }: { mode: "voice" | "text"; onStart: () => void 
         <p className="mt-4 text-lg text-balance text-ink-soft">
           {mode === "text"
             ? "Type your answers and our health companion will guide you through. About five minutes — no forms."
-            : "Our health companion will ask you a few questions out loud. Just answer in your own words — no forms, about five minutes."}
+            : "Our health companion will ask you a few questions out loud. Hold the talk button while you answer, in your own words — no forms, about five minutes."}
         </p>
 
         <ul className="mt-7 space-y-3">
@@ -183,8 +196,8 @@ function Intro({ mode, onStart }: { mode: "voice" | "text"; onStart: () => void 
         </Button>
         {mode !== "text" && (
           <p className="text-center text-sm text-ink-faint">
-            Your browser will ask permission to use your microphone. No microphone? We'll switch
-            to typing automatically.
+            Your browser will ask permission to use your microphone — it only listens while you
+            hold the button. No microphone? We'll switch to typing automatically.
           </p>
         )}
         {session ? (

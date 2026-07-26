@@ -31,8 +31,11 @@ patient-facing loop:
   OpenAI's Realtime API (`gpt-realtime-2.1`, WebRTC) discovers the patient's
   location and travel range, health conditions, goals, starting fitness,
   interests, weekly availability, and constraints — filling a live profile card
-  as it learns. Ends with the pod reveal. Falls back to typed chat
-  automatically when no microphone is available (or with `/induction?mode=text`).
+  as it learns. Ends with the pod reveal. Speaking is push-to-talk: hold the
+  talk button (or the space bar) while answering, release to send — no
+  automatic voice detection. A keyboard button switches to typed chat
+  mid-conversation, and typed chat is also the automatic fallback when no
+  microphone is available (or with `/induction?mode=text`).
 - **Home** — next event with one-tap RSVP, pod snapshot, attendance streak.
 - **Learn** — Duolingo-style bite-sized lessons on the habits behind the plan
   (sleep, protein, fibre, water, movement). Lessons unlock sequentially along

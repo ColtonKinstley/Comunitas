@@ -37,6 +37,13 @@ const MAX_AUTO_TURNS = 8;
 /** Long enough for the "finding your group" beat to read as deliberate. */
 const REVEAL_DELAY_MS = 1200;
 
+/**
+ * A press shorter than this is a fumble, not a turn. Committing a near-empty
+ * audio buffer errors and would burn a model turn on silence, so we clear it
+ * and pretend nothing happened.
+ */
+const MIN_HOLD_MS = 300;
+
 type ServerEvent = Record<string, unknown> & { type?: unknown };
 
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
@@ -106,6 +113,11 @@ export function useInduction({ audioRef, initialMode, initialPatientId }: UseInd
 
   const activeResponseRef = useRef(false);
   const pendingResponseRef = useRef(false);
+  /** Mirrors `assistantSpeaking` for the push-to-talk barge-in check. */
+  const assistantSpeakingRef = useRef(false);
+  /** True between push-to-talk press and release. */
+  const holdingRef = useRef(false);
+  const holdStartedAtRef = useRef(0);
   const autoTurnsRef = useRef(0);
   /** item_id → the function call announced by `response.output_item.added`. */
   const callsRef = useRef(new Map<string, { name: string; callId: string }>());
@@ -334,13 +346,8 @@ export function useInduction({ audioRef, initialMode, initialPatientId }: UseInd
 
       switch (type) {
         /* -------------------------------------------------- user speech */
-        case "input_audio_buffer.speech_started":
-          setUserSpeaking(true);
-          autoTurnsRef.current = 0;
-          break;
-        case "input_audio_buffer.speech_stopped":
-          setUserSpeaking(false);
-          break;
+        // No VAD events arrive: turn detection is off and `userSpeaking` is
+        // driven locally by the push-to-talk press/release.
         case "conversation.item.input_audio_transcription.delta": {
           const id = str(event.item_id);
           if (id) upsertCaption(id, "user", { delta: str(event.delta) ?? "" });
@@ -389,11 +396,13 @@ export function useInduction({ audioRef, initialMode, initialPatientId }: UseInd
 
         /* ---------------------------------------------- speaking states */
         case "output_audio_buffer.started":
+          assistantSpeakingRef.current = true;
           setAssistantSpeaking(true);
           setThinking(false);
           break;
         case "output_audio_buffer.stopped":
         case "output_audio_buffer.cleared":
+          assistantSpeakingRef.current = false;
           setAssistantSpeaking(false);
           break;
 
@@ -453,6 +462,11 @@ export function useInduction({ audioRef, initialMode, initialPatientId }: UseInd
       setPhase("permission");
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Push-to-talk: the track stays muted (WebRTC sends silence) until the
+        // person actually holds the button.
+        stream.getAudioTracks().forEach((t) => {
+          t.enabled = false;
+        });
       } catch {
         // No mic, or permission denied — drop into the typed fallback rather
         // than dead-ending the demo.
@@ -501,6 +515,13 @@ export function useInduction({ audioRef, initialMode, initialPatientId }: UseInd
       });
       dc.addEventListener("open", () => {
         setPhase("live");
+        // Belt and braces: the server mints sessions without VAD, but assert
+        // it from the client too so a stale api deploy can't re-enable it and
+        // fight the push-to-talk commits.
+        send({
+          type: "session.update",
+          session: { type: "realtime", audio: { input: { turn_detection: null } } },
+        });
         // Nothing has been said yet, so nudge the interviewer to open.
         activeResponseRef.current = true;
         send({ type: "response.create" });
@@ -551,6 +572,46 @@ export function useInduction({ audioRef, initialMode, initialPatientId }: UseInd
     [phase, record, requestResponse, send, upsertCaption],
   );
 
+  /**
+   * Push-to-talk press. Unmutes the mic and, if the interviewer is mid-turn,
+   * barges in — people will naturally press to answer before it stops talking.
+   */
+  const startTalking = useCallback(() => {
+    if (holdingRef.current || completedRef.current) return;
+    const track = micRef.current?.getAudioTracks()[0];
+    if (!track || dcRef.current?.readyState !== "open") return;
+    holdingRef.current = true;
+    holdStartedAtRef.current = Date.now();
+    autoTurnsRef.current = 0;
+    if (activeResponseRef.current) {
+      pendingResponseRef.current = false;
+      send({ type: "response.cancel" });
+    }
+    if (assistantSpeakingRef.current) send({ type: "output_audio_buffer.clear" });
+    // Drop the silence the muted track has been streaming since the last turn.
+    send({ type: "input_audio_buffer.clear" });
+    track.enabled = true;
+    setUserSpeaking(true);
+  }, [send]);
+
+  /**
+   * Push-to-talk release. Mutes the mic again and hands the turn to the model —
+   * unless the press was too short to contain anything.
+   */
+  const stopTalking = useCallback(() => {
+    if (!holdingRef.current) return;
+    holdingRef.current = false;
+    const track = micRef.current?.getAudioTracks()[0];
+    if (track) track.enabled = false;
+    setUserSpeaking(false);
+    if (Date.now() - holdStartedAtRef.current < MIN_HOLD_MS) {
+      send({ type: "input_audio_buffer.clear" });
+      return;
+    }
+    send({ type: "input_audio_buffer.commit" });
+    requestResponse();
+  }, [requestResponse, send]);
+
   const start = useCallback(() => void connect(), [connect]);
 
   const retry = useCallback(() => {
@@ -558,7 +619,20 @@ export function useInduction({ audioRef, initialMode, initialPatientId }: UseInd
     void connect();
   }, [connect, teardown]);
 
-  const switchToText = useCallback(() => setMode("text"), []);
+  /**
+   * Bail out of voice into the typed composer, mid-conversation. One-way:
+   * the mic is released entirely (browser recording indicator goes off).
+   */
+  const switchToText = useCallback(() => {
+    if (holdingRef.current) {
+      holdingRef.current = false;
+      send({ type: "input_audio_buffer.clear" });
+    }
+    micRef.current?.getTracks().forEach((t) => t.stop());
+    micRef.current = null;
+    setUserSpeaking(false);
+    setMode("text");
+  }, [send]);
 
   /* ------------------------------------------------------------ lifecycle */
 
@@ -584,6 +658,8 @@ export function useInduction({ audioRef, initialMode, initialPatientId }: UseInd
     start,
     retry,
     sendText,
+    startTalking,
+    stopTalking,
     switchToText,
   };
 }
