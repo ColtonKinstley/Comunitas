@@ -125,9 +125,13 @@ one for the origin you demo from).
 bun run dev               # api on :3001 and web on :5173, together
 ```
 
-Then open <http://localhost:5173>. The welcome screen offers **Start your
-induction** (new patient, voice interview) or **Continue as Priya (demo)**,
-which loads the seeded demo patient with a five-week attendance streak.
+Then open <http://localhost:5173>. The root page is the static marketing
+landing page (`web/index.html`); its **Find my pod** buttons lead to
+<http://localhost:5173/welcome>, the app's welcome screen, which offers
+**Start your induction** (new patient, voice interview) or **Continue as
+Priya (demo)**, which loads the seeded demo patient with a five-week
+attendance streak. Every app route lives in `web/app.html` (see the
+`appHtmlFallback` plugin in `web/vite.config.ts`).
 
 ### Scripts
 
@@ -197,7 +201,7 @@ Two Vercel projects deployed from this one repo:
 | Project         | Root dir | What Vercel does                                        |
 | --------------- | -------- | ------------------------------------------------------- |
 | `comunitas-api` | `api/`   | Detects Hono (`src/index.ts` default-exports the app); every route becomes a Fluid-compute function |
-| `comunitas-web` | `web/`   | Vite static build; `web/vercel.json` rewrites `/api/*` to the api deployment (same-origin, no CORS) and falls back to `index.html` for react-router |
+| `comunitas-web` | `web/`   | Vite static build; `web/vercel.json` rewrites `/api/*` to the api deployment (same-origin, no CORS) and falls back to `app.html` for react-router (`index.html` is the static landing page at `/`) |
 
 - `api/src/index.ts` exports the bare Hono app for Vercel; local dev goes
   through `api/src/dev.ts`, which adds the Bun port/hostname config.

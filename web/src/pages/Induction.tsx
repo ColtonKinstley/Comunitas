@@ -205,7 +205,7 @@ function Intro({ mode, onStart }: { mode: "voice" | "text"; onStart: () => void 
             </Button>
           </>
         ) : (
-          <LinkButton to="/" variant="ghost" size="md" fullWidth>
+          <LinkButton to="/welcome" variant="ghost" size="md" fullWidth>
             Not now
           </LinkButton>
         )}
@@ -266,7 +266,7 @@ function ErrorState({ message, onRetry }: { message: string | null; onRetry: () 
         <Button size="lg" fullWidth onClick={onRetry}>
           Try again
         </Button>
-        <LinkButton to="/" variant="ghost" size="md" fullWidth>
+        <LinkButton to="/welcome" variant="ghost" size="md" fullWidth>
           Back to start
         </LinkButton>
       </div>

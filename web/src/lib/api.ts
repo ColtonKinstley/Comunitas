@@ -49,8 +49,8 @@ const PATIENT_SCOPED = /^\/patients\/[^/?#]+(?:[/?#]|$)/;
 function forgetMissingPatient(path: string): void {
   if (!PATIENT_SCOPED.test(path)) return;
   clearCurrentPatient();
-  if (typeof window !== "undefined" && window.location.pathname !== "/") {
-    window.location.replace("/");
+  if (typeof window !== "undefined" && window.location.pathname !== "/welcome") {
+    window.location.replace("/welcome");
   }
 }
 

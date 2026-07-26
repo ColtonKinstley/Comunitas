@@ -92,7 +92,8 @@ export default function Welcome() {
       // when e.g. no client id is configured for the provider.
       const { error: signInError } = await authClient.signIn.social({
         provider,
-        callbackURL: "/",
+        // Back to the app's welcome screen, not the static landing page at "/".
+        callbackURL: "/welcome",
       });
       if (signInError) {
         setError(notConfigured);

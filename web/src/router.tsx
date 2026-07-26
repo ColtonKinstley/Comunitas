@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, redirect } from "react-router";
 import { AppLayout } from "./AppLayout";
 import Calendar from "./pages/Calendar";
 import Events from "./pages/Events";
@@ -21,7 +21,11 @@ export const router = createBrowserRouter([
     // Anything React Router would otherwise render as a raw stack trace.
     ErrorBoundary: RouteErrorPage,
     children: [
-      { index: true, Component: Welcome },
+      // "/" is the static landing page (web/index.html), served before the SPA
+      // in both prod (filesystem beats rewrites) and dev (see vite.config.ts).
+      // This redirect only catches in-app navigations to "/".
+      { index: true, loader: () => redirect("/welcome") },
+      { path: "welcome", Component: Welcome },
       { path: "induction", Component: Induction },
       { path: "home", Component: Home },
       { path: "learn", Component: Learn },

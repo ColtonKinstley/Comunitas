@@ -1,23 +1,290 @@
 <!doctype html>
 <html lang="en-GB">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#4a8f41" />
-    <meta
-      name="description"
-      content="Comunitas — prescription in, community out. Find a local group that matches your health goals."
-    />
-    <title>Comunitas</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#237A3B">
+<meta
+  name="description"
+  content="Comunitas matches you with nearby people who share your health goals, then plans and books activities that suit everyone."
+>
+<title>Comunitas — Healthy change, made together</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #FFFFFF; color: #17211B; font-family: 'Instrument Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #237A3B; text-decoration: none; }
+  a:hover { color: #143D26; }
+  .nav-link { font-size: 15px; font-weight: 500; color: #143D26; }
+  .nav-link:hover { color: #237A3B; }
+  .cta-button { background: #237A3B; color: #FFFFFF; font-weight: 600; border-radius: 999px; display: inline-block; }
+  .cta-button:hover { background: #143D26; color: #FFFFFF; }
+  .phone-shot { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+
+  /* The design export is desktop-first; stack its grids on small screens. */
+  @media (max-width: 900px) {
+    .nav-links { gap: 16px !important; }
+    .nav-links .nav-link { display: none; }
+    .hero { grid-template-columns: 1fr !important; padding-top: 48px !important; }
+    .hero-phones { height: 440px !important; transform: scale(0.82); transform-origin: top center; }
+    .hero h1 { font-size: 42px !important; }
+    .three-up, .four-up, .two-up { grid-template-columns: 1fr !important; }
+    .learn-phones { transform: scale(0.85); transform-origin: top center; }
+  }
+</style>
+</head>
+<body>
+
+<nav style="position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid #E7EEE8;">
+  <div style="max-width: 1120px; margin: 0 auto; padding: 0 32px; height: 68px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 30px; height: 30px; border-radius: 50%; background: #237A3B; display: grid; place-items: center;">
+        <div style="width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid #DCEED8;"></div>
+      </div>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 21px; color: #143D26; letter-spacing: -0.01em;">Comunitas</span>
+    </div>
+    <div class="nav-links" style="display: flex; align-items: center; gap: 28px;">
+      <a class="nav-link" href="#how">How it works</a>
+      <a class="nav-link" href="#activities">Activities</a>
+      <a class="nav-link" href="#safety">Safety</a>
+      <a class="cta-button" href="/welcome" style="font-size: 15px; padding: 10px 20px;">Find my pod</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" style="max-width: 1120px; margin: 0 auto; padding: 88px 32px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;">
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 58px; line-height: 1.05; letter-spacing: -0.02em; color: #143D26; text-wrap: pretty;">Healthy change, made together.</h1>
+    <p style="margin: 0; font-size: 19px; line-height: 1.55; color: #657068; max-width: 44ch; text-wrap: pretty;">Comunitas matches you with nearby people who share your goals, then plans and books activities that suit everyone.</p>
+    <div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start;">
+      <a class="cta-button" href="/welcome" style="font-size: 17px; padding: 15px 30px;">Find my pod</a>
+      <span style="font-size: 14px; color: #657068; font-style: italic;">Two-minute conversation. No forms.</span>
+    </div>
+  </div>
+  <div class="hero-phones" style="position: relative; height: 520px;">
+    <div style="position: absolute; left: 0; top: 60px; width: 200px; height: 420px; border-radius: 28px; background: #143D26; padding: 8px; box-shadow: 0 24px 48px rgba(20,61,38,0.18); transform: rotate(-5deg); z-index: 1;">
+      <div style="width: 100%; height: 100%; border-radius: 21px; overflow: hidden; background: #F3F8F2;">
+        <img class="phone-shot" src="/landing/hero-induction.webp" alt="Induction screen — voice conversation filling a live profile">
+      </div>
+    </div>
+    <div style="position: absolute; left: 50%; top: 20px; width: 210px; height: 440px; margin-left: -105px; border-radius: 28px; background: #143D26; padding: 8px; box-shadow: 0 28px 56px rgba(20,61,38,0.22); z-index: 3;">
+      <div style="width: 100%; height: 100%; border-radius: 21px; overflow: hidden; background: #F3F8F2;">
+        <img class="phone-shot" src="/landing/hero-podmatch.webp" alt="Pod match screen — your local group reveal">
+      </div>
+    </div>
+    <div style="position: absolute; right: 0; top: 60px; width: 200px; height: 420px; border-radius: 28px; background: #143D26; padding: 8px; box-shadow: 0 24px 48px rgba(20,61,38,0.18); transform: rotate(5deg); z-index: 2;">
+      <div style="width: 100%; height: 100%; border-radius: 21px; overflow: hidden; background: #F3F8F2;">
+        <img class="phone-shot" src="/landing/hero-activity.webp" alt="Booked activity screen — next event with one-tap RSVP">
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="three-up" style="max-width: 1120px; margin: 0 auto; padding: 48px 32px 72px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+  <div style="background: #F3F8F2; border-radius: 20px; padding: 32px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="width: 44px; height: 44px; border-radius: 12px; background: #DCEED8; display: grid; place-items: center; font-size: 20px; color: #237A3B; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif;">⌖</div>
+    <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 21px; font-weight: 600; color: #143D26;">Matched nearby</h3>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #657068;">People with similar goals and starting points, close enough to actually meet.</p>
+  </div>
+  <div style="background: #F3F8F2; border-radius: 20px; padding: 32px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="width: 44px; height: 44px; border-radius: 12px; background: #DCEED8; display: grid; place-items: center; font-size: 20px; color: #237A3B; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif;">✓</div>
+    <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 21px; font-weight: 600; color: #143D26;">Planned for you</h3>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #657068;">The AI handles schedules, venues and bookings. Nobody has to organize.</p>
+  </div>
+  <div style="background: #F3F8F2; border-radius: 20px; padding: 32px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="width: 44px; height: 44px; border-radius: 12px; background: #DCEED8; display: grid; place-items: center; font-size: 20px; color: #237A3B; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif;">◷</div>
+    <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 21px; font-weight: 600; color: #143D26;">Supported together</h3>
+    <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #657068;">Your pod receives reminders, check-ins and ongoing encouragement.</p>
+  </div>
+</section>
+
+<section id="activities" style="background: #F3F8F2; padding: 80px 0;">
+  <div style="max-width: 1120px; margin: 0 auto; padding: 0 32px; display: flex; flex-direction: column; gap: 8px;">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 38px; font-weight: 600; letter-spacing: -0.015em; color: #143D26;">See what your next week could look like</h2>
+    <p style="margin: 0; font-size: 17px; color: #657068;">Real activities, chosen to fit your pod.</p>
+  </div>
+  <div style="max-width: 1120px; margin: 32px auto 0; padding: 0 32px; display: flex; gap: 20px; overflow-x: auto;">
+    <div style="flex: 0 0 240px; background: #FFFFFF; border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 14px; border: 1px solid #E7EEE8;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #237A3B;">Saturday</span>
+        <span style="font-size: 13px; font-weight: 600; color: #143D26; background: #DCEED8; padding: 4px 10px; border-radius: 999px;">Free</span>
+      </div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26; line-height: 1.2;">Saturday Park Loop</h3>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #657068;">
+        <span>Victoria Park, 0.8 mi</span>
+        <span>Gentle 3 km walk</span>
+        <span>Step-free route</span>
+      </div>
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid #F0F4EF; font-size: 13px; font-weight: 500; color: #657068;">Pod of 6</div>
+    </div>
+    <div style="flex: 0 0 240px; background: #FFFFFF; border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 14px; border: 1px solid #E7EEE8;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #237A3B;">Monday</span>
+        <span style="font-size: 13px; font-weight: 600; color: #143D26; background: #DCEED8; padding: 4px 10px; border-radius: 999px;">£4</span>
+      </div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26; line-height: 1.2;">Beginner Badminton</h3>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #657068;">
+        <span>Leisure Centre, 1.2 mi</span>
+        <span>Absolute beginners</span>
+        <span>Racquets provided</span>
+      </div>
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid #F0F4EF; font-size: 13px; font-weight: 500; color: #657068;">Pod of 6</div>
+    </div>
+    <div style="flex: 0 0 240px; background: #FFFFFF; border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 14px; border: 1px solid #E7EEE8;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #237A3B;">Wednesday</span>
+        <span style="font-size: 13px; font-weight: 600; color: #143D26; background: #DCEED8; padding: 4px 10px; border-radius: 999px;">£6</span>
+      </div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26; line-height: 1.2;">Cook &amp; Share</h3>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #657068;">
+        <span>Community Kitchen, 0.5 mi</span>
+        <span>Relaxed, 90 min</span>
+        <span>Seated stations</span>
+      </div>
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid #F0F4EF; font-size: 13px; font-weight: 500; color: #657068;">Pod of 6</div>
+    </div>
+    <div style="flex: 0 0 240px; background: #FFFFFF; border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 14px; border: 1px solid #E7EEE8;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #237A3B;">Thursday</span>
+        <span style="font-size: 13px; font-weight: 600; color: #143D26; background: #DCEED8; padding: 4px 10px; border-radius: 999px;">£3.50</span>
+      </div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26; line-height: 1.2;">Gentle Swim</h3>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #657068;">
+        <span>Aqua Centre, 1.5 mi</span>
+        <span>Slow lane, low impact</span>
+        <span>Pool hoist available</span>
+      </div>
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid #F0F4EF; font-size: 13px; font-weight: 500; color: #657068;">Pod of 6</div>
+    </div>
+    <div style="flex: 0 0 240px; background: #FFFFFF; border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 14px; border: 1px solid #E7EEE8;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #237A3B;">Sunday</span>
+        <span style="font-size: 13px; font-weight: 600; color: #143D26; background: #DCEED8; padding: 4px 10px; border-radius: 999px;">Pay-as-you-go</span>
+      </div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26; line-height: 1.2;">Alcohol-Free Coffee</h3>
+      <div style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #657068;">
+        <span>Grounded Café, 0.3 mi</span>
+        <span>Just conversation</span>
+        <span>Wheelchair accessible</span>
+      </div>
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid #F0F4EF; font-size: 13px; font-weight: 500; color: #657068;">Pod of 6</div>
+    </div>
+  </div>
+</section>
+
+<section id="how" style="max-width: 1120px; margin: 0 auto; padding: 88px 32px;">
+  <h2 style="margin: 0 0 48px; font-family: 'Bricolage Grotesque', sans-serif; font-size: 38px; font-weight: 600; letter-spacing: -0.015em; color: #143D26;">How it works</h2>
+  <div class="four-up" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;">
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 44px; font-weight: 600; color: #DCEED8; line-height: 1;">1</div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26;">Tell us what fits</h3>
+      <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #657068;">A two-minute voice conversation about your goals, health and schedule. No forms.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 44px; font-weight: 600; color: #DCEED8; line-height: 1;">2</div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26;">Meet your pod</h3>
+      <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #657068;">We match you with 5–8 nearby people who share your goals and starting point.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 44px; font-weight: 600; color: #DCEED8; line-height: 1;">3</div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26;">Receive your plan</h3>
+      <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #657068;">Activities chosen, booked and scheduled for the whole pod — automatically.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 44px; font-weight: 600; color: #DCEED8; line-height: 1;">4</div>
+      <h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600; color: #143D26;">Keep going together</h3>
+      <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #657068;">Reminders, check-ins and encouragement keep everyone showing up.</p>
+    </div>
+  </div>
+</section>
+
+<section style="background: #143D26; padding: 88px 0;">
+  <div class="two-up" style="max-width: 1120px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;">
+    <div style="display: flex; justify-content: center;">
+      <div style="width: 250px; height: 520px; border-radius: 32px; background: #0D2A19; padding: 9px; box-shadow: 0 32px 64px rgba(0,0,0,0.35);">
+        <div style="width: 100%; height: 100%; border-radius: 24px; overflow: hidden; background: #F3F8F2;">
+          <img class="phone-shot" src="/landing/snapshot-priya.webp" alt="Priya's home screen — Saturday Park Loop, ready to go">
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 42px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.1; color: #FFFFFF; text-wrap: pretty;">Your healthier week, already planned.</h2>
+      <p style="margin: 0; font-size: 17px; line-height: 1.6; color: #B8CDBE; max-width: 42ch;">No searching, no calendar coordination, no organizing. Open the app and your next activity is waiting — with people you know will be there.</p>
+    </div>
+  </div>
+</section>
+
+<section id="learn" class="two-up" style="max-width: 1120px; margin: 0 auto; padding: 88px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;">
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #237A3B;">Learn</span>
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 38px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.1; color: #143D26; text-wrap: pretty;">Understand the why, a couple of minutes at a time.</h2>
+    <p style="margin: 0; font-size: 17px; line-height: 1.6; color: #657068; max-width: 44ch; text-wrap: pretty;">Short lessons matched to your goals and conditions — sleep, protein, movement, whatever your plan is built on. Learn alongside your pod, at your own pace.</p>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 26px; height: 26px; border-radius: 50%; background: #DCEED8; display: grid; place-items: center; color: #237A3B; font-size: 13px; font-weight: 700;">✓</div>
+        <span style="font-size: 15px; color: #17211B;">Personalised to your health goals and conditions</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 26px; height: 26px; border-radius: 50%; background: #DCEED8; display: grid; place-items: center; color: #237A3B; font-size: 13px; font-weight: 700;">✓</div>
+        <span style="font-size: 15px; color: #17211B;">Bite-size lessons — a couple of minutes each</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 26px; height: 26px; border-radius: 50%; background: #DCEED8; display: grid; place-items: center; color: #237A3B; font-size: 13px; font-weight: 700;">✓</div>
+        <span style="font-size: 15px; color: #17211B;">Progress you can see, lesson by lesson</span>
+      </div>
+    </div>
+  </div>
+  <div class="learn-phones" style="display: flex; justify-content: center; gap: 24px; align-items: center;">
+    <div style="width: 220px; height: 460px; border-radius: 30px; background: #143D26; padding: 8px; box-shadow: 0 24px 48px rgba(20,61,38,0.18); transform: rotate(-3deg);">
+      <div style="width: 100%; height: 100%; border-radius: 23px; overflow: hidden; background: #F3F8F2;">
+        <img class="phone-shot" src="/landing/learn-foundations.png" alt="Learn screen — Foundations of Healthy Living">
+      </div>
+    </div>
+    <div style="width: 220px; height: 460px; border-radius: 30px; background: #143D26; padding: 8px; box-shadow: 0 24px 48px rgba(20,61,38,0.18); transform: rotate(3deg); margin-top: 48px;">
+      <div style="width: 100%; height: 100%; border-radius: 23px; overflow: hidden; background: #F3F8F2;">
+        <img class="phone-shot" src="/landing/learn-lesson.png" alt="Lesson screen — Melatonin, your sleep signal">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="safety" style="max-width: 1120px; margin: 0 auto; padding: 72px 32px;">
+  <div class="four-up" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 24px; border: 1px solid #E7EEE8; border-radius: 16px;">
+      <span style="font-size: 16px; font-weight: 600; color: #143D26; font-family: 'Bricolage Grotesque', sans-serif;">Public venues</span>
+      <span style="font-size: 14px; line-height: 1.5; color: #657068;">Every activity happens in a public, verified location.</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 24px; border: 1px solid #E7EEE8; border-radius: 16px;">
+      <span style="font-size: 16px; font-weight: 600; color: #143D26; font-family: 'Bricolage Grotesque', sans-serif;">Verified members</span>
+      <span style="font-size: 14px; line-height: 1.5; color: #657068;">Everyone in your pod is identity-checked.</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 24px; border: 1px solid #E7EEE8; border-radius: 16px;">
+      <span style="font-size: 16px; font-weight: 600; color: #143D26; font-family: 'Bricolage Grotesque', sans-serif;">Private health information</span>
+      <span style="font-size: 14px; line-height: 1.5; color: #657068;">Your conditions are never shared with your pod.</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px; padding: 24px; border: 1px solid #E7EEE8; border-radius: 16px;">
+      <span style="font-size: 16px; font-weight: 600; color: #143D26; font-family: 'Bricolage Grotesque', sans-serif;">Accessible activities</span>
+      <span style="font-size: 14px; line-height: 1.5; color: #657068;">Plans account for mobility, transport and confidence.</span>
+    </div>
+  </div>
+</section>
+
+<section id="cta" style="background: #F3F8F2; padding: 96px 0;">
+  <div style="max-width: 720px; margin: 0 auto; padding: 0 32px; display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center;">
+    <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 44px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.1; color: #143D26; text-wrap: pretty;">Your next healthy plan could already have people in it.</h2>
+    <a class="cta-button" href="/welcome" style="font-size: 18px; padding: 16px 36px;">Find my pod</a>
+    <span style="font-size: 14px; color: #657068; font-style: italic;">Free to try · You control what you share</span>
+  </div>
+</section>
+
+<footer style="border-top: 1px solid #E7EEE8; padding: 28px 0;">
+  <div style="max-width: 1120px; margin: 0 auto; padding: 0 32px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #657068;">
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; color: #143D26;">Comunitas</span>
+    <span>Prescription in, community out.</span>
+  </div>
+</footer>
+
+</body>
 </html>
