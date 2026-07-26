@@ -8,18 +8,19 @@ Comunitas turns a GP's lifestyle prescription into a plan with people in it —
 matching patients into local **pods** of people with similar health goals, then
 planning the group's activities for them.
 
-[**Try the live app →**](https://comunitas-web.vercel.app)
+<a href="https://comunitas-web.vercel.app/">
+  <img src="https://img.shields.io/badge/%E2%96%B6%20%20Try%20the%20live%20app-comunitas--web.vercel.app-143D26?style=for-the-badge&labelColor=2f6b43" alt="Try the live app at comunitas-web.vercel.app" />
+</a>
 
-[Live app](https://comunitas-web.vercel.app) ·
 [API](https://comunitas-api.vercel.app/api/health) ·
 [Product brief](docs/project-plan.md) ·
 [Induction app design](docs/superpowers/specs/2026-07-25-induction-app-design.md)
 
 <br />
 
-<img src="web/public/landing/hero-induction.webp" width="240" alt="Voice induction — an AI interviewer builds your profile in conversation" />&nbsp;
-<img src="web/public/landing/hero-podmatch.webp" width="240" alt="Pod reveal — matched with local people who share your goals" />&nbsp;
-<img src="web/public/landing/hero-activity.webp" width="240" alt="Your week — group activities planned and ready to RSVP" />
+<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-induction.webp" width="240" alt="Voice induction — an AI interviewer builds your profile in conversation" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-podmatch.webp" width="240" alt="Pod reveal — matched with local people who share your goals" /></a>&nbsp;
+<a href="https://comunitas-web.vercel.app/"><img src="web/public/landing/hero-activity.webp" width="240" alt="Your week — group activities planned and ready to RSVP" /></a>
 
 </div>
 
@@ -93,11 +94,30 @@ Pod assignment currently uses a nearest-pod heuristic (geography first, per the
 product thesis); the profile schema is deliberately rich so the real matching
 engine can slot in behind the same API.
 
-<div align="center">
-<img src="web/public/landing/learn-foundations.png" width="240" alt="Learn track — sequential habit lessons" />&nbsp;
-<img src="web/public/landing/learn-lesson.png" width="240" alt="A lesson — info cards with quick check questions" />&nbsp;
-<img src="web/public/landing/snapshot-priya.webp" width="240" alt="Home — next event, pod snapshot, attendance streak" />
-</div>
+### Screenshots
+
+<table align="center">
+  <tr>
+    <td align="center"><b>Home</b> — next event, one-tap RSVP</td>
+    <td align="center"><b>Learn</b> — bite-sized habit lessons</td>
+    <td align="center"><b>Calendar</b> — the pod's month at a glance</td>
+  </tr>
+  <tr>
+    <td><img src="images/home.png" width="260" alt="Home screen with the next event, RSVP buttons, and what's after that" /></td>
+    <td><img src="images/learn.png" width="260" alt="Learn track with sequential lessons, XP, and locked units" /></td>
+    <td><img src="images/calendar.png" width="260" alt="Calendar month view with confirmed and suggested activity days" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Map</b> — your pod and events around you</td>
+    <td align="center"><b>Events</b> — agent-suggested activities</td>
+    <td align="center"><b>Profile</b> — the matcher-ready profile</td>
+  </tr>
+  <tr>
+    <td><img src="images/map.png" width="260" alt="Map of pod members, travel radius, and upcoming event venues" /></td>
+    <td><img src="images/events.png" width="260" alt="Activities feed with an event suggested by the Comunitas agent" /></td>
+    <td><img src="images/profile.png" width="260" alt="Profile screen with health conditions, goals, and activity level" /></td>
+  </tr>
+</table>
 
 ## Development
 
