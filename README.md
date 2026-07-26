@@ -47,8 +47,9 @@ patient-facing loop:
   event venues, and approximate pod-member locations.
 - **Events & history** — upcoming feed with RSVPs, past timeline with
   attendance and adherence streaks.
-- **Sign-in** — an optional "Continue with Google" button on the welcome
-  screen links your browser session to a patient record (via better-auth), so
+- **Sign-in** — optional "Continue with Google" / "Continue with GitHub"
+  buttons on the welcome
+  screen link your browser session to a patient record (via better-auth), so
   the app remembers you across devices; sign out from Profile. The anonymous
   flows — voice induction and **Continue as Priya (demo)** — are unaffected
   and remain the fastest way in.
@@ -76,7 +77,7 @@ network. The web dev server proxies `/api` → `http://localhost:3001`.
   (`brew install postgresql@18 && brew services start postgresql@18`)
 - A database named `comunitas`: `createdb comunitas`
 - An `OPENAI_API_KEY` for the voice induction (everything else works without one)
-- Google OAuth credentials for sign-in (optional; the app works anonymously)
+- Google and/or GitHub OAuth credentials for sign-in (optional; the app works anonymously)
 
 ### Setup
 
@@ -98,6 +99,8 @@ exported in your shell instead — the API falls back to `process.env`.
 | `BETTER_AUTH_SECRET`   | Secret key for auth sessions (run `openssl rand -base64 32` to generate)  | No       |
 | `GOOGLE_CLIENT_ID`     | Google OAuth client (get from console.cloud.google.com/apis/credentials)  | No       |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                                                 | No       |
+| `GITHUB_CLIENT_ID`     | GitHub OAuth app (github.com/settings/developers → OAuth Apps)             | No       |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth app secret                                                    | No       |
 
 Sign-in is optional; everything works anonymously without auth configuration.
 
@@ -105,6 +108,11 @@ When Google credentials are set, register `<BETTER_AUTH_URL>/api/auth/callback/g
 as an authorized redirect URI in the Google Cloud Console for **both** origins you use
 the app from: `http://localhost:5173/api/auth/callback/google` and
 `https://macmini.taildd0824.ts.net/api/auth/callback/google`.
+
+For GitHub, create an OAuth app at github.com/settings/developers with the
+authorization callback URL `<BETTER_AUTH_URL>/api/auth/callback/github`. GitHub
+OAuth apps allow only one callback URL, so create one app per origin (or just
+one for the origin you demo from).
 
 ### Run
 

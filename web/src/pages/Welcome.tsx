@@ -6,6 +6,15 @@ import { claimPatient, getDemo, getMe } from "../lib/api";
 import { authClient } from "../lib/auth";
 import { getCurrentPatientId, setCurrentPatientId } from "../lib/patient";
 
+// lucide-react dropped brand icons, so the GitHub mark is inlined.
+function GithubMark({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.04 11.04 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.26 5.66.41.36.78 1.06.78 2.14 0 1.54-.01 2.79-.01 3.17 0 .31.21.67.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
+    </svg>
+  );
+}
+
 /**
  * The brand moment. Two ways in: start a fresh voice induction, or step
  * straight into the seeded demo patient's fully-populated account.
@@ -13,7 +22,7 @@ import { getCurrentPatientId, setCurrentPatientId } from "../lib/patient";
 export default function Welcome() {
   const navigate = useNavigate();
   const [loadingDemo, setLoadingDemo] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<"google" | "github" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Resolves an existing auth session (e.g. landing back here after an OAuth
@@ -71,28 +80,29 @@ export default function Welcome() {
     }
   }
 
-  async function continueWithGoogle() {
-    if (loadingGoogle) return;
-    setLoadingGoogle(true);
+  async function continueWithProvider(provider: "google" | "github") {
+    if (loadingProvider) return;
+    setLoadingProvider(provider);
     setError(null);
+    const notConfigured = `${provider === "google" ? "Google" : "GitHub"} sign-in isn't configured. Set ${provider.toUpperCase()}_CLIENT_ID in .env (see README).`;
     try {
       // better-auth client methods resolve `{ data, error }` rather than
       // throwing on API/HTTP failure — the try/catch below only covers
       // network-level rejections, the `error` check is what actually fires
-      // when e.g. no Google client id is configured.
+      // when e.g. no client id is configured for the provider.
       const { error: signInError } = await authClient.signIn.social({
-        provider: "google",
+        provider,
         callbackURL: "/",
       });
       if (signInError) {
-        setError("Google sign-in isn't configured. Set GOOGLE_CLIENT_ID in .env (see README).");
-        setLoadingGoogle(false);
+        setError(notConfigured);
+        setLoadingProvider(null);
       }
-      // On success the browser redirects to Google, so this component
+      // On success the browser redirects to the provider, so this component
       // unmounts — no need to reset the flag on that path.
     } catch {
-      setError("Google sign-in isn't configured. Set GOOGLE_CLIENT_ID in .env (see README).");
-      setLoadingGoogle(false);
+      setError(notConfigured);
+      setLoadingProvider(null);
     }
   }
 
@@ -139,15 +149,30 @@ export default function Welcome() {
           variant="secondary"
           size="lg"
           fullWidth
-          onClick={continueWithGoogle}
-          disabled={loadingGoogle}
+          onClick={() => continueWithProvider("google")}
+          disabled={loadingProvider !== null}
         >
-          {loadingGoogle ? (
+          {loadingProvider === "google" ? (
             <LoaderCircle size={22} className="animate-spin" aria-hidden />
           ) : (
             <LogIn size={22} aria-hidden />
           )}
-          {loadingGoogle ? "Redirecting…" : "Continue with Google"}
+          {loadingProvider === "google" ? "Redirecting…" : "Continue with Google"}
+        </Button>
+
+        <Button
+          variant="secondary"
+          size="lg"
+          fullWidth
+          onClick={() => continueWithProvider("github")}
+          disabled={loadingProvider !== null}
+        >
+          {loadingProvider === "github" ? (
+            <LoaderCircle size={22} className="animate-spin" aria-hidden />
+          ) : (
+            <GithubMark size={22} />
+          )}
+          {loadingProvider === "github" ? "Redirecting…" : "Continue with GitHub"}
         </Button>
 
         <Button

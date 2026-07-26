@@ -3,12 +3,14 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../db/index.js";
 import { env } from "../env.js";
 
-// Half-configured Google credentials fail late (and opaquely) at the token
+// Half-configured credentials fail late (and opaquely) at the token
 // exchange step rather than at boot — warn up front so it's obvious why.
-if (env.GOOGLE_CLIENT_ID && !env.GOOGLE_CLIENT_SECRET) {
-  console.warn(
-    "[auth] GOOGLE_CLIENT_ID is set but GOOGLE_CLIENT_SECRET is empty — Google sign-in will fail at token exchange.",
-  );
+for (const provider of ["GOOGLE", "GITHUB"] as const) {
+  if (env[`${provider}_CLIENT_ID`] && !env[`${provider}_CLIENT_SECRET`]) {
+    console.warn(
+      `[auth] ${provider}_CLIENT_ID is set but ${provider}_CLIENT_SECRET is empty — sign-in will fail at token exchange.`,
+    );
+  }
 }
 
 /**
@@ -24,14 +26,24 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
   // Health app — pin phone-home off explicitly rather than relying on defaults.
   telemetry: { enabled: false },
-  socialProviders: env.GOOGLE_CLIENT_ID
-    ? {
-        google: {
-          clientId: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
-        },
-      }
-    : {},
+  socialProviders: {
+    ...(env.GOOGLE_CLIENT_ID
+      ? {
+          google: {
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+          },
+        }
+      : {}),
+    ...(env.GITHUB_CLIENT_ID
+      ? {
+          github: {
+            clientId: env.GITHUB_CLIENT_ID,
+            clientSecret: env.GITHUB_CLIENT_SECRET,
+          },
+        }
+      : {}),
+  },
   trustedOrigins: [
     "http://localhost:5173",
     "https://macmini.taildd0824.ts.net",

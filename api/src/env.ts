@@ -30,4 +30,6 @@ export const env = {
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET?.trim() || "",
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID?.trim() || "",
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET?.trim() || "",
+  GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID?.trim() || "",
+  GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET?.trim() || "",
 } as const;
