@@ -1,8 +1,9 @@
-import { CalendarDays, CircleUserRound, House, MapPin, Users } from "lucide-react";
+import { CalendarDays, CircleUserRound, GraduationCap, House, MapPin, Users } from "lucide-react";
 import { NavLink } from "react-router";
 
 const TABS = [
   { to: "/home", label: "Home", Icon: House },
+  { to: "/learn", label: "Learn", Icon: GraduationCap },
   { to: "/calendar", label: "Calendar", Icon: CalendarDays },
   { to: "/map", label: "Map", Icon: MapPin },
   { to: "/events", label: "Events", Icon: Users },
@@ -16,7 +17,7 @@ export function TabNav() {
       aria-label="Main"
       className="shrink-0 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="grid grid-cols-6">
         {TABS.map(({ to, label, Icon }) => (
           <li key={to}>
             <NavLink

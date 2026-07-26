@@ -7,12 +7,15 @@
 import type {
   ApiError as ApiErrorBody,
   CompleteInductionResponse,
+  CompleteLessonBody,
+  CompleteLessonResponse,
   DemoResponse,
   EventDetail,
   EventStatus,
   EventWithRsvp,
   HistoryResponse,
   InductionSessionStatus,
+  LearnProgressResponse,
   MapResponse,
   MeResponse,
   PatientProfile,
@@ -162,6 +165,19 @@ export const getPatientHistory = (patientId: string) =>
 
 export const getPatientMap = (patientId: string) =>
   request<MapResponse>(`/patients/${patientId}/map`);
+
+/* --------------------------------------------------------------- learn */
+
+/** Every lesson this patient has completed, oldest first. */
+export const getLearnProgress = (patientId: string) =>
+  request<LearnProgressResponse>(`/patients/${patientId}/learn`);
+
+/** Records (or refreshes) a lesson completion; upserts on the lesson slug. */
+export const completeLesson = (patientId: string, lessonId: string, body: CompleteLessonBody) =>
+  request<CompleteLessonResponse>(`/patients/${patientId}/learn/${lessonId}/complete`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 
 /* ---------------------------------------------------------------- pods */
 

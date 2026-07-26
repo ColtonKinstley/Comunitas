@@ -34,6 +34,10 @@ patient-facing loop:
   as it learns. Ends with the pod reveal. Falls back to typed chat
   automatically when no microphone is available (or with `/induction?mode=text`).
 - **Home** — next event with one-tap RSVP, pod snapshot, attendance streak.
+- **Learn** — Duolingo-style bite-sized lessons on the habits behind the plan
+  (sleep, protein, fibre, water, movement). Lessons unlock sequentially along
+  one track, mix info cards with quick check questions, and award 10 XP each;
+  progress is stored on the server so it follows the patient across devices.
 - **Profile** — the structured, matcher-ready profile; every section
   tap-to-edit, postcodes geocoded via postcodes.io.
 - **Pod** — who you're matched with (first names and shared interests only —
@@ -131,7 +135,9 @@ activities with attendance history plus three upcoming ones at real venues. All
 timestamps are relative to the moment you run the seed, so "past" and
 "upcoming" stay correct.
 
-The demo patient is **Priya Shah** (`GET /api/demo` returns her id).
+The demo patient is **Priya Shah** (`GET /api/demo` returns her id). She starts
+three lessons into the learn track (the sleep unit plus the first protein
+lesson), so the Learn path lands mid-track with the next lesson lit.
 
 Re-run `bun run db:reset` before a demo — E2E induction runs and RSVP clicks
 mutate the seed state. A patient id in localStorage that no longer exists after
